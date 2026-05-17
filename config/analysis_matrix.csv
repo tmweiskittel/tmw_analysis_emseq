@@ -1,0 +1,6 @@
+analysis,A_vs_B,B_vs_C
+qc,true,true
+methylation_calls,true,true
+dmr,true,true
+fragmentomics,false,true
+cnv,false,false
