@@ -1,0 +1,5 @@
+sample,gcs_bam
+S1,gs://my-bucket/emseq/S1.bam
+S2,gs://my-bucket/emseq/S2.bam
+S3,gs://my-bucket/emseq/S3.bam
+S4,gs://my-bucket/emseq/S4.bam
