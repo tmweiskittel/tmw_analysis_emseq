@@ -1,16 +1,41 @@
+# ============================================================================
+# Snakefile
+# EM-seq cfDNA downstream analysis pipeline
+# ============================================================================
+
 import pandas as pd
 
 configfile: "config/config.yaml"
 
+
+# ── Directories ──────────────────────────────────────────────────────────────
+
+D_OUT = config.get("outdir", "results")
+D_LOGS = config.get("logs", "logs")
+D_BENCHMARK = config.get("benchmark", "benchmark")
+D_WORK = config.get("workdir", "work")
+
+
+# ── External resources ───────────────────────────────────────────────────────
+
+R_EMSEQ = config.get("repo", ".")
+ENV_METHYLKIT = config.get("env_methylkit", "envs/methylkit.yaml")
+
+
+# ── Input CSVs ───────────────────────────────────────────────────────────────
+
 SAMPLES = pd.read_csv(config["samples_csv"]).set_index("sample")
-SAMPLE_CONTRASTS = pd.read_csv(config["sample_contrasts_csv"]).set_index("sample")
-ANALYSIS_MATRIX = pd.read_csv(config["analysis_matrix_csv"]).set_index("analysis")
 
-OUTDIR = config["outdir"]
+SAMPLE_CONTRASTS = pd.read_csv(
+    config["sample_contrasts_csv"]
+).set_index("sample")
 
-CONTRASTS = list(SAMPLE_CONTRASTS.columns)
-ANALYSES = list(ANALYSIS_MATRIX.index)
+ANALYSIS_MATRIX = pd.read_csv(
+    config["analysis_matrix_csv"]
+).set_index("analysis")
 
+
+# ── Normalize analysis matrix ────────────────────────────────────────────────
 
 def as_bool(x):
     return str(x).strip().lower() in ["true", "1", "yes", "y"]
@@ -18,181 +43,123 @@ def as_bool(x):
 
 ANALYSIS_MATRIX = ANALYSIS_MATRIX.applymap(as_bool)
 
-
-def samples_for_contrast(contrast):
-    vals = SAMPLE_CONTRASTS[contrast]
-    return vals[vals.notna() & (vals.astype(str).str.upper() != "NA")].index.tolist()
+CONTRASTS = list(SAMPLE_CONTRASTS.columns)
+ANALYSES = list(ANALYSIS_MATRIX.index)
 
 
-def groups_for_contrast(contrast):
-    vals = SAMPLE_CONTRASTS[contrast]
-    vals = vals[vals.notna() & (vals.astype(str).str.upper() != "NA")]
-    return sorted(vals.unique())
+# ── General helpers ──────────────────────────────────────────────────────────
 
-
-def samples_for_group(contrast, group):
-    vals = SAMPLE_CONTRASTS[contrast]
-    return vals[vals == group].index.tolist()
-
-
-def gcs_bam_for_sample(sample):
-    return SAMPLES.loc[sample, "gcs_bam"]
-
-
-def local_bam_for_sample(sample):
-    return f"{OUTDIR}/bam/{sample}.bam"
+def is_not_na(x):
+    return pd.notna(x) and str(x).strip().upper() != "NA"
 
 
 def analysis_enabled(analysis, contrast):
     if analysis not in ANALYSIS_MATRIX.index:
         return False
+
     if contrast not in ANALYSIS_MATRIX.columns:
         return False
+
     return bool(ANALYSIS_MATRIX.loc[analysis, contrast])
+
+
+def enabled_contrasts_for_analysis(analysis):
+    return [
+        contrast
+        for contrast in CONTRASTS
+        if analysis_enabled(analysis, contrast)
+    ]
+
+
+def samples_for_contrast(contrast):
+    vals = SAMPLE_CONTRASTS[contrast]
+    vals = vals[vals.apply(is_not_na)]
+    return vals.index.tolist()
+
+
+def groups_for_contrast(contrast):
+    vals = SAMPLE_CONTRASTS[contrast]
+    vals = vals[vals.apply(is_not_na)]
+    return sorted(vals.unique())
+
+
+def samples_for_group(contrast, group):
+    vals = SAMPLE_CONTRASTS[contrast]
+    vals = vals[vals.apply(is_not_na)]
+    return vals[vals == group].index.tolist()
+
+
+def require_two_groups(contrast):
+    groups = groups_for_contrast(contrast)
+
+    if len(groups) != 2:
+        raise ValueError(
+            f"Contrast {contrast} must have exactly two groups, found: {groups}"
+        )
+
+    return groups
+
+
+def treatment_vector_for_contrast(contrast):
+    groups = require_two_groups(contrast)
+
+    group_to_tx = {
+        groups[0]: 0,
+        groups[1]: 1,
+    }
+
+    vals = SAMPLE_CONTRASTS[contrast]
+    vals = vals[vals.apply(is_not_na)]
+
+    return [group_to_tx[group] for group in vals.tolist()]
+
+
+def contrast_param(contrast, param, default=None):
+    return (
+        config
+        .get("contrast_params", {})
+        .get(contrast, {})
+        .get(param, default)
+    )
+
+
+# ── Input file helpers ───────────────────────────────────────────────────────
+
+def methylkit_db_for_sample(sample):
+    return SAMPLES.loc[sample, "gcs_methylkit_db"]
+
+
+# ── Final target collection ──────────────────────────────────────────────────
+
+def differential_methylation_outputs():
+    outputs = []
+
+    for contrast in enabled_contrasts_for_analysis("differential_methylation"):
+        outputs.extend([
+            f"{D_OUT}/dmr/diff/methylBase_{contrast}.txt.bgz",
+            f"{D_OUT}/dmr/diff/methylDiff_{contrast}.txt.bgz",
+            f"{D_OUT}/dmr/diff/methylBase_{contrast}.tiled.txt.bgz",
+            f"{D_OUT}/dmr/diff/methylDiff_{contrast}.tiled.txt.bgz",
+            f"{D_OUT}/dmr/diff/{contrast}_pos_meth.tsv",
+            f"{D_OUT}/dmr/annotation/{contrast}_annotated.tsv",
+        ])
+
+    return outputs
 
 
 def enabled_outputs():
     outputs = []
 
-    for contrast in CONTRASTS:
-        contrast_samples = samples_for_contrast(contrast)
-
-        if analysis_enabled("qc", contrast):
-            outputs += expand(
-                f"{OUTDIR}/qc/{contrast}/{{sample}}.qc.txt",
-                sample=contrast_samples,
-            )
-
-        if analysis_enabled("methylation_calls", contrast):
-            outputs += expand(
-                f"{OUTDIR}/methylation/{contrast}/{{sample}}.meth.tsv",
-                sample=contrast_samples,
-            )
-
-        if analysis_enabled("fragmentomics", contrast):
-            outputs += expand(
-                f"{OUTDIR}/fragmentomics/{contrast}/{{sample}}.fragmetrics.tsv",
-                sample=contrast_samples,
-            )
-
-        if analysis_enabled("cnv", contrast):
-            outputs += expand(
-                f"{OUTDIR}/cnv/{contrast}/{{sample}}.cnv.tsv",
-                sample=contrast_samples,
-            )
-
-        if analysis_enabled("dmr", contrast):
-            outputs.append(f"{OUTDIR}/dmr/{contrast}/dmrs.tsv")
+    outputs.extend(differential_methylation_outputs())
 
     return outputs
 
 
 rule all:
     input:
-        enabled_outputs()
+        enabled_outputs
 
 
-rule download_bam:
-    output:
-        bam=f"{OUTDIR}/bam/{{sample}}.bam"
-    params:
-        gcs=lambda wc: gcs_bam_for_sample(wc.sample)
-    shell:
-        """
-        gsutil cp {params.gcs} {output.bam}
-        """
+# ── Rule modules ─────────────────────────────────────────────────────────────
 
-
-rule qc:
-    input:
-        bam=f"{OUTDIR}/bam/{{sample}}.bam"
-    output:
-        f"{OUTDIR}/qc/{{contrast}}/{{sample}}.qc.txt"
-    shell:
-        """
-        echo "QC for {input.bam}" > {output}
-        """
-
-
-rule methylation_calls:
-    input:
-        bam=f"{OUTDIR}/bam/{{sample}}.bam"
-    output:
-        f"{OUTDIR}/methylation/{{contrast}}/{{sample}}.meth.tsv"
-    shell:
-        """
-        echo "Methylation calls for {input.bam}" > {output}
-        """
-
-
-rule fragmentomics:
-    input:
-        bam=f"{OUTDIR}/bam/{{sample}}.bam"
-    output:
-        f"{OUTDIR}/fragmentomics/{{contrast}}/{{sample}}.fragmetrics.tsv"
-    shell:
-        """
-        echo "Fragmentomics for {input.bam}" > {output}
-        """
-
-
-rule cnv:
-    input:
-        bam=f"{OUTDIR}/bam/{{sample}}.bam"
-    output:
-        f"{OUTDIR}/cnv/{{contrast}}/{{sample}}.cnv.tsv"
-    shell:
-        """
-        echo "CNV for {input.bam}" > {output}
-        """
-
-
-def dmr_methylation_inputs(wildcards, group):
-    sample_ids = samples_for_group(wildcards.contrast, group)
-    return expand(
-        f"{OUTDIR}/methylation/{{contrast}}/{{sample}}.meth.tsv",
-        contrast=wildcards.contrast,
-        sample=sample_ids,
-    )
-
-
-def case_group(wildcards):
-    groups = groups_for_contrast(wildcards.contrast)
-    if len(groups) != 2:
-        raise ValueError(
-            f"Contrast {wildcards.contrast} must have exactly two groups, found: {groups}"
-        )
-    return groups[0]
-
-
-def control_group(wildcards):
-    groups = groups_for_contrast(wildcards.contrast)
-    if len(groups) != 2:
-        raise ValueError(
-            f"Contrast {wildcards.contrast} must have exactly two groups, found: {groups}"
-        )
-    return groups[1]
-
-
-rule dmr:
-    input:
-        case=lambda wc: dmr_methylation_inputs(wc, case_group(wc)),
-        control=lambda wc: dmr_methylation_inputs(wc, control_group(wc)),
-    output:
-        f"{OUTDIR}/dmr/{{contrast}}/dmrs.tsv"
-    params:
-        case_group=case_group,
-        control_group=control_group,
-        min_coverage=config["params"]["min_coverage"],
-        qvalue_cutoff=config["params"]["qvalue_cutoff"],
-    shell:
-        """
-        Rscript scripts/run_dmr.R \
-          --case-group {params.case_group} \
-          --control-group {params.control_group} \
-          --case-files {input.case} \
-          --control-files {input.control} \
-          --min-coverage {params.min_coverage} \
-          --qvalue {params.qvalue_cutoff} \
-          --output {output}
-        """
+include: "rules/differential_methylation.smk"
