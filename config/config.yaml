@@ -2,6 +2,9 @@ samples_csv: "config/samples.csv"
 sample_contrasts_csv: "config/sample_contrasts.csv"
 analysis_matrix_csv: "config/analysis_matrix.csv"
 
+emseq_ref_name: "hg38"
+align_method: "bwameth"
+
 outdir: "results"
 
 params:
