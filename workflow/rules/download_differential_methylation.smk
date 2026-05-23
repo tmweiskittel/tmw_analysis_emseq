@@ -1,12 +1,12 @@
 rule download_methylkit_db:
     message:
-        "Download methylKit tabix database from Google Cloud Storage"
+        "Download per-sample MethylDackel methylKit tabix database"
     output:
-        db=f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz",
-        tbi=f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz.tbi"
+        db=lambda wc: local_methylkit_db_for_sample(wc.sample),
+        tbi=lambda wc: local_methylkit_tbi_for_sample(wc.sample)
     params:
-        db_gcs=lambda wc: methylkit_db_for_sample(wc.sample),
-        tbi_gcs=lambda wc: methylkit_db_for_sample(wc.sample) + ".tbi"
+        db_gcs=lambda wc: methylkit_db_gcs_for_sample(wc.sample),
+        tbi_gcs=lambda wc: methylkit_tbi_gcs_for_sample(wc.sample)
     log:
         cmd=f"{D_LOGS}/download_methylkit_db/{{sample}}.log"
     shell:
