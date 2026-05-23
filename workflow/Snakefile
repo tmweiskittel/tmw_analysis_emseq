@@ -125,11 +125,12 @@ def contrast_param(contrast, param, default=None):
 
 # ── Input file helpers ───────────────────────────────────────────────────────
 
-def methylkit_db_for_sample(sample):
-    return SAMPLES.loc[sample, "gcs_methylkit_db"]
+def local_methylkit_db_for_sample(sample):
+    return f"{D_WORK}/methylkit_db/{sample}.methyldackel.txt.bgz"
 
-# ── Input file helpers ───────────────────────────────────────────────────────
+# ── uploading rules ───────────────────────────────────────────────────────
 include: rules/differential_methylation.smk
+include: rules/download_differential_methylation.smk
 
 # ── Final target collection ──────────────────────────────────────────────────
 
