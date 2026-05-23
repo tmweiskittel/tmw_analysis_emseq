@@ -12,11 +12,8 @@ rule methylkit_unite:
         ENV_METHYLKIT
     input:
         mkit_lib_db=lambda wc: expand(
-            "{gcs_methylkit_db}",
-            gcs_methylkit_db=[
-                methylkit_db_for_sample(sample)
-                for sample in samples_for_contrast(wc.experiment)
-            ],
+            f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz",
+            sample=samples_for_contrast(wc.experiment),
         )
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_unite.log"
@@ -102,11 +99,8 @@ rule methylkit_diff_tiled:
         ENV_METHYLKIT
     input:
         mkit_lib_db=lambda wc: expand(
-            "{gcs_methylkit_db}",
-            gcs_methylkit_db=[
-                methylkit_db_for_sample(sample)
-                for sample in samples_for_contrast(wc.experiment)
-            ],
+            f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz",
+            sample=samples_for_contrast(wc.experiment),
         )
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_diff_tiled.log"
