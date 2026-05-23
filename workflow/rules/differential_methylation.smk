@@ -11,10 +11,10 @@ rule methylkit_unite:
     conda:
         ENV_METHYLKIT
     input:
-        mkit_lib_db=lambda wc: expand(
-            f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz",
-            sample=samples_for_contrast(wc.experiment),
-        )
+        mkit_lib_db=lambda wc: [
+            local_methylkit_db_for_sample(sample)
+            for sample in samples_for_contrast(wc.experiment)
+        ]
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_unite.log"
     benchmark:
@@ -98,10 +98,10 @@ rule methylkit_diff_tiled:
     conda:
         ENV_METHYLKIT
     input:
-        mkit_lib_db=lambda wc: expand(
-            f"{D_WORK}/methylkit_db/{{sample}}.methyldackel.txt.bgz",
-            sample=samples_for_contrast(wc.experiment),
-        )
+        mkit_lib_db=lambda wc: [
+            local_methylkit_db_for_sample(sample)
+            for sample in samples_for_contrast(wc.experiment)
+        ]
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_diff_tiled.log"
     benchmark:
