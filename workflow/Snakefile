@@ -123,10 +123,35 @@ def contrast_param(contrast, param, default=None):
     )
 
 
+
 # ── Input file helpers ───────────────────────────────────────────────────────
 
+def gcs_sample_dir(sample):
+    return SAMPLES.loc[sample, "gcs_sample_dir"].rstrip("/")
+
+
+def methylkit_db_gcs_for_sample(sample):
+    return (
+        f"{gcs_sample_dir(sample)}/dmr/tabix/"
+        f"{sample}.{config['emseq_ref_name']}."
+        f"{config['align_method']}.methyldackel.txt.bgz"
+    )
+
+
+def methylkit_tbi_gcs_for_sample(sample):
+    return methylkit_db_gcs_for_sample(sample) + ".tbi"
+
+
 def local_methylkit_db_for_sample(sample):
-    return f"{D_WORK}/methylkit_db/{sample}.methyldackel.txt.bgz"
+    return (
+        f"{D_WORK}/methylkit_db/"
+        f"{sample}.{config['emseq_ref_name']}."
+        f"{config['align_method']}.methyldackel.txt.bgz"
+    )
+
+
+def local_methylkit_tbi_for_sample(sample):
+    return local_methylkit_db_for_sample(sample) + ".tbi"
 
 # ── uploading rules ───────────────────────────────────────────────────────
 include: rules/differential_methylation.smk
