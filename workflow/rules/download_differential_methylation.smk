@@ -2,8 +2,8 @@ rule download_methylkit_db:
     message:
         "Download per-sample MethylDackel methylKit tabix database"
     output:
-        db=lambda wc: local_methylkit_db_for_sample(wc.sample),
-        tbi=lambda wc: local_methylkit_tbi_for_sample(wc.sample)
+        db=f"{D_WORK}/methylkit_db/{{sample}}.{config['emseq_ref_name']}.{config['align_method']}.methyldackel.txt.bgz",
+        tbi=f"{D_WORK}/methylkit_db/{{sample}}.{config['emseq_ref_name']}.{config['align_method']}.methyldackel.txt.bgz.tbi"
     params:
         db_gcs=lambda wc: methylkit_db_gcs_for_sample(wc.sample),
         tbi_gcs=lambda wc: methylkit_tbi_gcs_for_sample(wc.sample)
