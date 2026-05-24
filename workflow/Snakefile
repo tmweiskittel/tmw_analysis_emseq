@@ -191,4 +191,5 @@ rule all:
 
 
 include: "rules/download_differential_methylation.smk"
+include: "rules/setup_differential_methylation.smk"
 include: "rules/differential_methylation.smk"
