@@ -143,11 +143,7 @@ def gcs_sample_dir(sample):
 
 
 def methylkit_db_gcs_for_sample(sample):
-    return (
-        f"{gcs_sample_dir(sample)}/dmr/tabix/"
-        f"{sample}.{config['emseq_ref_name']}."
-        f"{config['align_method']}.methyldackel.txt.bgz"
-    )
+    return f"{gcs_sample_dir(sample)}/{sample}.CpG.methylKit.gz"
 
 
 def methylkit_tbi_gcs_for_sample(sample):
@@ -155,11 +151,7 @@ def methylkit_tbi_gcs_for_sample(sample):
 
 
 def local_methylkit_db_for_sample(sample):
-    return (
-        f"{D_WORK}/methylkit_db/"
-        f"{sample}.{config['emseq_ref_name']}."
-        f"{config['align_method']}.methyldackel.txt.bgz"
-    )
+    return f"{D_WORK}/methylkit_db/{sample}.CpG.methylKit.gz"
 
 
 def local_methylkit_tbi_for_sample(sample):
