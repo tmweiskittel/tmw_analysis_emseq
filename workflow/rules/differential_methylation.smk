@@ -181,8 +181,9 @@ rule methylkit_annotate_cpg:
         experiment = "[^.]+"
     conda:
         "../envs/methylkit.yaml"
-    input:
-        db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
+   input:
+        db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz",
+        gtf=config["annotation_gtf"]
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_annotate_cpg.log"
     benchmark:
@@ -196,11 +197,10 @@ rule methylkit_annotate_cpg:
     shell:
         """
         exec &>> "{log.cmd}"
-        echo "[annotate-cpg] $(date) experiment={wildcards.experiment}"
-
         mkdir -p "$(dirname "{output.tsv}")"
 
         Rscript "{params.script}" \
           --db "{input.db}" \
+          --gtf "{input.gtf}" \
           --out "{output.tsv}"
         """
