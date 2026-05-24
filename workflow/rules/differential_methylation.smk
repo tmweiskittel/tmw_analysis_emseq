@@ -32,7 +32,7 @@ rule methylkit_unite:
     threads:
         32
     output:
-        mbase=f"{D_EMSEQ}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
+        mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     shell:
         """
         exec &>> "{log.cmd}"
@@ -62,7 +62,7 @@ rule methylkit_diff:
     conda:
         ENV_METHYLKIT
     input:
-        mbase=f"{D_EMSEQ}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
+        mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_diff.log"
     benchmark:
@@ -73,7 +73,7 @@ rule methylkit_diff:
     threads:
         32
     output:
-        mdiff=f"{D_EMSEQ}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
+        mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
     shell:
         """
         exec &>> "{log.cmd}"
@@ -120,8 +120,8 @@ rule methylkit_diff_tiled:
     threads:
         32
     output:
-        unite=f"{D_EMSEQ}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz",
-        diff=f"{D_EMSEQ}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz"
+        unite=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz",
+        diff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz"
     shell:
         """
         exec &>> "{log.cmd}"
@@ -152,7 +152,7 @@ rule methylkit_meth_extract:
     conda:
         ENV_METHYLKIT
     input:
-        mbase=f"{D_EMSEQ}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
+        mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_meth_extract.log"
     benchmark:
@@ -162,7 +162,7 @@ rule methylkit_meth_extract:
     threads:
         1
     output:
-        tsv=f"{D_EMSEQ}/dmr/diff/{{experiment}}_pos_meth.tsv"
+        tsv=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv"
     shell:
         """
         exec &>> "{log.cmd}"
@@ -182,7 +182,7 @@ rule methylkit_annotate_cpg:
     conda:
         ENV_METHYLKIT
     input:
-        db=f"{D_EMSEQ}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
+        db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
     log:
         cmd=f"{D_LOGS}/{{experiment}}_methylkit_annotate_cpg.log"
     benchmark:
@@ -192,7 +192,7 @@ rule methylkit_annotate_cpg:
     threads:
         1
     output:
-        tsv=f"{D_EMSEQ}/dmr/annotation/{{experiment}}_annotated.tsv"
+        tsv=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
     shell:
         """
         exec &>> "{log.cmd}"
