@@ -16,6 +16,9 @@ D_WORK = config.get("workdir", "work")
 R_EMSEQ = config.get("repo", ".")
 ENV_METHYLKIT = config.get("env_methylkit", "envs/methylkit.yaml")
 
+from pathlib import Path
+
+WORKFLOW_DIR = workflow.basedir
 
 def clean_header(name):
     return name.strip().lstrip("\ufeff")
