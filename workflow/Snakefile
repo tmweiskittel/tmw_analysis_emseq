@@ -8,59 +8,51 @@ import csv
 configfile: "config/config.yaml"
 
 
-# ── Directories ──────────────────────────────────────────────────────────────
-
 D_OUT = config.get("outdir", "results")
 D_LOGS = config.get("logs", "logs")
 D_BENCHMARK = config.get("benchmark", "benchmark")
 D_WORK = config.get("workdir", "work")
 
-
-# ── External resources ───────────────────────────────────────────────────────
-
 R_EMSEQ = config.get("repo", ".")
 ENV_METHYLKIT = config.get("env_methylkit", "envs/methylkit.yaml")
 
 
-# ── Input CSVs ───────────────────────────────────────────────────────────────
-
-SAMPLES = pd.read_csv(config["samples_csv"]).set_index("sample")
-
-SAMPLE_CONTRASTS = pd.read_csv(
-    config["sample_contrasts_csv"]
-).set_index("sample")
-
-ANALYSIS_MATRIX = pd.read_csv(
-    config["analysis_matrix_csv"]
-).set_index("analysis")
+def read_csv_by_key(path, key_col):
+    with open(path, newline="") as handle:
+        reader = csv.DictReader(handle)
+        return {row[key_col]: row for row in reader}
 
 
-# ── Normalize analysis matrix ────────────────────────────────────────────────
+SAMPLES = read_csv_by_key(config["samples_csv"], "sample")
+SAMPLE_CONTRASTS = read_csv_by_key(config["sample_contrasts_csv"], "sample")
+ANALYSIS_MATRIX = read_csv_by_key(config["analysis_matrix_csv"], "analysis")
+
+CONTRASTS = [
+    col for col in next(iter(SAMPLE_CONTRASTS.values())).keys()
+    if col != "sample"
+]
+
+ANALYSES = list(ANALYSIS_MATRIX.keys())
+
 
 def as_bool(x):
     return str(x).strip().lower() in ["true", "1", "yes", "y"]
 
 
-ANALYSIS_MATRIX = ANALYSIS_MATRIX.applymap(as_bool)
-
-CONTRASTS = list(SAMPLE_CONTRASTS.columns)
-ANALYSES = list(ANALYSIS_MATRIX.index)
-
-
-# ── General helpers ──────────────────────────────────────────────────────────
-
 def is_not_na(x):
-    return pd.notna(x) and str(x).strip().upper() != "NA"
+    return (
+        x is not None
+        and str(x).strip() != ""
+        and str(x).strip().upper() != "NA"
+    )
 
 
 def analysis_enabled(analysis, contrast):
-    if analysis not in ANALYSIS_MATRIX.index:
+    if analysis not in ANALYSIS_MATRIX:
         return False
-
-    if contrast not in ANALYSIS_MATRIX.columns:
+    if contrast not in ANALYSIS_MATRIX[analysis]:
         return False
-
-    return bool(ANALYSIS_MATRIX.loc[analysis, contrast])
+    return as_bool(ANALYSIS_MATRIX[analysis][contrast])
 
 
 def enabled_contrasts_for_analysis(analysis):
@@ -72,21 +64,27 @@ def enabled_contrasts_for_analysis(analysis):
 
 
 def samples_for_contrast(contrast):
-    vals = SAMPLE_CONTRASTS[contrast]
-    vals = vals[vals.apply(is_not_na)]
-    return vals.index.tolist()
+    return [
+        sample
+        for sample, row in SAMPLE_CONTRASTS.items()
+        if is_not_na(row.get(contrast))
+    ]
 
 
 def groups_for_contrast(contrast):
-    vals = SAMPLE_CONTRASTS[contrast]
-    vals = vals[vals.apply(is_not_na)]
-    return sorted(vals.unique())
+    return sorted({
+        row[contrast]
+        for row in SAMPLE_CONTRASTS.values()
+        if is_not_na(row.get(contrast))
+    })
 
 
 def samples_for_group(contrast, group):
-    vals = SAMPLE_CONTRASTS[contrast]
-    vals = vals[vals.apply(is_not_na)]
-    return vals[vals == group].index.tolist()
+    return [
+        sample
+        for sample, row in SAMPLE_CONTRASTS.items()
+        if row.get(contrast) == group
+    ]
 
 
 def require_two_groups(contrast):
@@ -108,10 +106,10 @@ def treatment_vector_for_contrast(contrast):
         groups[1]: 1,
     }
 
-    vals = SAMPLE_CONTRASTS[contrast]
-    vals = vals[vals.apply(is_not_na)]
-
-    return [group_to_tx[group] for group in vals.tolist()]
+    return [
+        group_to_tx[SAMPLE_CONTRASTS[sample][contrast]]
+        for sample in samples_for_contrast(contrast)
+    ]
 
 
 def contrast_param(contrast, param, default=None):
@@ -123,11 +121,8 @@ def contrast_param(contrast, param, default=None):
     )
 
 
-
-# ── Input file helpers ───────────────────────────────────────────────────────
-
 def gcs_sample_dir(sample):
-    return SAMPLES.loc[sample, "gcs_sample_dir"].rstrip("/")
+    return SAMPLES[sample]["gcs_sample_dir"].rstrip("/")
 
 
 def methylkit_db_gcs_for_sample(sample):
@@ -153,11 +148,6 @@ def local_methylkit_db_for_sample(sample):
 def local_methylkit_tbi_for_sample(sample):
     return local_methylkit_db_for_sample(sample) + ".tbi"
 
-# ── uploading rules ───────────────────────────────────────────────────────
-include: rules/differential_methylation.smk
-include: rules/download_differential_methylation.smk
-
-# ── Final target collection ──────────────────────────────────────────────────
 
 def differential_methylation_outputs():
     outputs = []
@@ -177,9 +167,7 @@ def differential_methylation_outputs():
 
 def enabled_outputs():
     outputs = []
-
     outputs.extend(differential_methylation_outputs())
-
     return outputs
 
 
@@ -188,6 +176,5 @@ rule all:
         enabled_outputs
 
 
-# ── Rule modules ─────────────────────────────────────────────────────────────
-
+include: "rules/download_differential_methylation.smk"
 include: "rules/differential_methylation.smk"
