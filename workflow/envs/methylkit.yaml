@@ -6,6 +6,10 @@ channels:
   - defaults
 
 dependencies:
+  - ca-certificates
+  - certifi
+  - openssl
+  - curl
   - r-base=4.3
   - bioconductor-methylkit
   - bioconductor-genomation
