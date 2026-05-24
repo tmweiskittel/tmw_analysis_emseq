@@ -3,20 +3,21 @@ name: methylkit
 channels:
   - conda-forge
   - bioconda
-  - defaults
+
+channel_priority: strict
 
 dependencies:
   - ca-certificates
   - certifi
   - openssl
   - curl
+  - htslib
+  - tabix
+
   - r-base=4.3
   - bioconductor-methylkit
+
   - r-data.table
-  - r-dplyr
-  - r-tidyr
   - r-optparse
   - r-readr
   - r-stringr
-  - tabix
-  - htslib
