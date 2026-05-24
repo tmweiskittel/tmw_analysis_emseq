@@ -13,7 +13,12 @@ D_LOGS = config.get("logs", "logs")
 D_BENCHMARK = config.get("benchmark", "benchmark")
 D_WORK = config.get("workdir", "work")
 
-R_EMSEQ = config.get("repo", ".")
+from pathlib import Path
+
+WORKFLOW_DIR = workflow.basedir
+R_EMSEQ = str(Path(WORKFLOW_DIR))
+
+# do I still need this variable? recheck later
 ENV_METHYLKIT = config.get("env_methylkit", "envs/methylkit.yaml")
 
 from pathlib import Path
