@@ -1,6 +1,6 @@
 samples_csv: "config/radnec_sampleloc.csv"
 sample_contrasts_csv: "config/radnec_samplecon.csv"
-analysis_matrix_csv: "config/radnnec_analysis.csv"
+analysis_matrix_csv: "config/radnec_analysis.csv"
 
 outdir: "/home/jupyter/data/analysis"
 workdir: "/home/jupyter/repos/tmw_analysis_emseq"
