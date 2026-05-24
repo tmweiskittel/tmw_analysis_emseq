@@ -9,7 +9,7 @@ rule methylkit_unite:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        ENV_METHYLKIT
+        "../envs/methylkit.yaml"
     input:
         mkit_lib_db=lambda wc: [
             local_methylkit_db_for_sample(sample)
@@ -60,7 +60,7 @@ rule methylkit_diff:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        ENV_METHYLKIT
+        "../envs/methylkit.yaml"
     input:
         mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
@@ -96,7 +96,7 @@ rule methylkit_diff_tiled:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        ENV_METHYLKIT
+        "../envs/methylkit.yaml"
     input:
         mkit_lib_db=lambda wc: [
             local_methylkit_db_for_sample(sample)
@@ -150,7 +150,7 @@ rule methylkit_meth_extract:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        ENV_METHYLKIT
+        "../envs/methylkit.yaml"
     input:
         mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
@@ -180,7 +180,7 @@ rule methylkit_annotate_cpg:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        ENV_METHYLKIT
+        "../envs/methylkit.yaml"
     input:
         db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
     log:
