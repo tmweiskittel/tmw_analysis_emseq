@@ -4,8 +4,8 @@ analysis_matrix_csv: "config/radnec_analysis.csv"
 
 outdir: "/home/jupyter/data/analysis"
 workdir: "/home/jupyter/repos/tmw_analysis_emseq"
-logs: "/data/emseq/analysis_logs"
-benchmark: "/data/emseq/benchmark"
+logs: "data/emseq/analysis_logs"
+benchmark: "data/emseq/benchmark"
 
 emseq_ref_name: "hg38"
 align_method: "bwameth"
