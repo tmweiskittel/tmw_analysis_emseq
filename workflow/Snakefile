@@ -187,7 +187,7 @@ def enabled_outputs():
 
 rule all:
     input:
-        enabled_outputs
+        enabled_outputs()
 
 
 include: "rules/download_differential_methylation.smk"
