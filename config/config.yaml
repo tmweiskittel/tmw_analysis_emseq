@@ -2,6 +2,9 @@ samples_csv: "config/radnec_sampleloc.csv"
 sample_contrasts_csv: "config/radnec_samplecon.csv"
 analysis_matrix_csv: "config/radnec_analysis.csv"
 
+annotation_gtf_url: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.basic.annotation.gtf.gz"
+annotation_gtf: "resources/gencode.v49.basic.annotation.gtf.gz"
+
 outdir: "/home/jupyter/data/analysis"
 workdir: "/home/jupyter/repos/tmw_analysis_emseq"
 logs: "/home/jupyter/data/analysis_logs"
