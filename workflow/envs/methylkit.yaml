@@ -1,0 +1,23 @@
+name: methylkit
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - r-base=4.3
+  - bioconductor-methylkit
+  - bioconductor-genomation
+  - bioconductor-rtracklayer
+  - bioconductor-genomicranges
+  - bioconductor-iranges
+  - bioconductor-s4vectors
+  - r-data.table
+  - r-dplyr
+  - r-tidyr
+  - r-optparse
+  - r-readr
+  - r-stringr
+  - tabix
+  - bgzip
