@@ -1,12 +1,8 @@
 rule download_methylkit_db:
-    message:
-        "Download per-sample MethylDackel methylKit tabix database"
     output:
-        db=f"{D_WORK}/methylkit_db/{{sample}}.{config['emseq_ref_name']}.{config['align_method']}.methyldackel.txt.bgz",
-        tbi=f"{D_WORK}/methylkit_db/{{sample}}.{config['emseq_ref_name']}.{config['align_method']}.methyldackel.txt.bgz.tbi"
+        db=f"{D_WORK}/methylkit_db/{{sample}}.CpG.methylKit.gz"
     params:
-        db_gcs=lambda wc: methylkit_db_gcs_for_sample(wc.sample),
-        tbi_gcs=lambda wc: methylkit_tbi_gcs_for_sample(wc.sample)
+        db_gcs=lambda wc: methylkit_db_gcs_for_sample(wc.sample)
     log:
         cmd=f"{D_LOGS}/download_methylkit_db/{{sample}}.log"
     shell:
@@ -14,17 +10,9 @@ rule download_methylkit_db:
         mkdir -p "$(dirname "{output.db}")" "$(dirname "{log.cmd}")"
         exec &>> "{log.cmd}"
 
-        echo "[download-methylkit-db] $(date) sample={wildcards.sample}"
-
         if [ ! -s "{output.db}" ]; then
             gsutil cp "{params.db_gcs}" "{output.db}"
         else
             echo "Already exists: {output.db}"
-        fi
-
-        if [ ! -s "{output.tbi}" ]; then
-            gsutil cp "{params.tbi_gcs}" "{output.tbi}"
-        else
-            echo "Already exists: {output.tbi}"
         fi
         """
