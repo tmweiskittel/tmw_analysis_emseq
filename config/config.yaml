@@ -2,6 +2,11 @@ samples_csv: "config/samples.csv"
 sample_contrasts_csv: "config/sample_contrasts.csv"
 analysis_matrix_csv: "config/analysis_matrix.csv"
 
+outdir: "/home/jupyter/data/analysis"
+workdir: "/home/jupyter/repos/tmw_analysis_emseq"
+logs: "/data/emseq/analysis_logs"
+benchmark: "/data/emseq/benchmark"
+
 emseq_ref_name: "hg38"
 align_method: "bwameth"
 
