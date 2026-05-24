@@ -1,4 +1,4 @@
-samples_csv: "config/radnec_samplesloc.csv"
+samples_csv: "config/radnec_sampleloc.csv"
 sample_contrasts_csv: "config/radnec_samplecon.csv"
 analysis_matrix_csv: "config/radnnec_analysis.csv"
 
