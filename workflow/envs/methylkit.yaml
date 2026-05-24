@@ -16,7 +16,9 @@ dependencies:
 
   - r-base=4.3
   - bioconductor-methylkit
-
+  - bioconductor-genomicranges
+  - bioconductor-rtracklayer
+  
   - r-data.table
   - r-optparse
   - r-readr
