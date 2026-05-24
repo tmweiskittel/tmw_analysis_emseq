@@ -3,7 +3,7 @@
 # EM-seq cfDNA downstream analysis pipeline
 # ============================================================================
 
-import pandas as pd
+import csv
 
 configfile: "config/config.yaml"
 
