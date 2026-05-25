@@ -24,6 +24,16 @@ files <- strsplit(opts$lib_db_list, " ")[[1]]
 ids <- strsplit(opts$lib_id_list, " ")[[1]]
 tx <- as.integer(strsplit(opts$treatment_list, " ")[[1]])
 
+if (length(files) != length(ids) || length(ids) != length(tx)) {
+  stop(sprintf(
+    "Length mismatch: files=%d ids=%d treatment=%d",
+    length(files), length(ids), length(tx)
+  ))
+}
+
+mbase_path <- file.path(opts$out_dir, paste0("methylBase_", opts$suffix, ".txt.bgz"))
+suppressWarnings(file.remove(mbase_path, paste0(mbase_path, ".tbi")))
+
 meth <- methRead(
   location = as.list(files),
   sample.id = as.list(ids),
