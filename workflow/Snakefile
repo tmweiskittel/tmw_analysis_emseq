@@ -148,7 +148,7 @@ def gcs_sample_dir(sample):
 
 def methylkit_db_gcs_for_sample(sample):
     return (
-        f"{gcs_sample_dir(sample)}/emseq/dmr/tabix/"
+        f"{gcs_sample_dir(sample)}"
         f"{sample}.{config['emseq_ref_name']}."
         f"{config['align_method']}.methyldackel.txt.bgz"
     )
