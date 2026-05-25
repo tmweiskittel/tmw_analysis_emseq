@@ -31,6 +31,7 @@ meth <- methRead(
   treatment = tx,
   context = "CpG",
   mincov = opts$mincov,
+  pipeline="bismarkCoverage",
   dbtype = "tabix",
   dbdir = opts$out_dir
 )
