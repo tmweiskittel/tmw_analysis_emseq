@@ -8,7 +8,7 @@ suppressPackageStartupMessages({
 
 opts <- parse_args(OptionParser(option_list = list(
   make_option("--db", type = "character"),
-  make_option("--out", type = "character")
+  make_option("--out", type = "character"),
   make_option("--gtf", type = "character")
 
 )))
