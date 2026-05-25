@@ -181,7 +181,7 @@ rule methylkit_annotate_cpg:
         experiment = "[^.]+"
     conda:
         "../envs/methylkit.yaml"
-   input:
+    input:
         db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz",
         gtf=config["annotation_gtf"]
     log:
