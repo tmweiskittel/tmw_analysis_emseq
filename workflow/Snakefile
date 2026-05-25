@@ -146,18 +146,22 @@ def contrast_param(contrast, param, default=None):
 def gcs_sample_dir(sample):
     return SAMPLES[sample]["gcs_sample_dir"].rstrip("/")
 
-
 def methylkit_db_gcs_for_sample(sample):
-    return f"{gcs_sample_dir(sample)}/{sample}.CpG.methylKit.gz"
-
+    return (
+        f"{gcs_sample_dir(sample)}/emseq/dmr/tabix/"
+        f"{sample}.{config['emseq_ref_name']}."
+        f"{config['align_method']}.methyldackel.txt.bgz"
+    )
 
 def methylkit_tbi_gcs_for_sample(sample):
     return methylkit_db_gcs_for_sample(sample) + ".tbi"
 
-
 def local_methylkit_db_for_sample(sample):
-    return f"{D_WORK}/methylkit_db/{sample}.CpG.methylKit.gz"
-
+    return (
+        f"{D_WORK}/methylkit_db/"
+        f"{sample}.{config['emseq_ref_name']}."
+        f"{config['align_method']}.methyldackel.txt.bgz"
+    )
 
 def local_methylkit_tbi_for_sample(sample):
     return local_methylkit_db_for_sample(sample) + ".tbi"
