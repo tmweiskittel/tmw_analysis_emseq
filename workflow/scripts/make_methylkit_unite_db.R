@@ -31,14 +31,14 @@ meth <- methRead(
   treatment = tx,
   context = "CpG",
   mincov = opts$mincov,
-  pipeline="bismarkCoverage",
   dbtype = "tabix",
   dbdir = opts$out_dir
 )
 
-unite(
+mbase <- unite(
   meth,
-  destrand = FALSE,
+  destrand = TRUE,
+  chunk.size = opts$chunk_size,
   min.per.group = opts$min_per_group,
   mc.cores = opts$cores,
   save.db = TRUE,
