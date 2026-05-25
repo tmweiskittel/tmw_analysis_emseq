@@ -1,6 +1,10 @@
 rule download_methylkit_db:
     output:
-        db=f"{D_WORK}/methylkit_db/{{sample}}.CpG.methylKit.gz"
+        db=(
+            f"{D_WORK}/methylkit_db/"
+            f"{{sample}}.{config['emseq_ref_name']}."
+            f"{config['align_method']}.methyldackel.txt.bgz"
+        )
     params:
         db_gcs=lambda wc: methylkit_db_gcs_for_sample(wc.sample)
     log:
