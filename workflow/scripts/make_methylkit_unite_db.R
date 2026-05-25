@@ -30,7 +30,6 @@ meth <- methRead(
   assembly = opts$assembly,
   treatment = tx,
   context = "CpG",
-  pipeline = "methylKit",
   mincov = opts$mincov,
   dbtype = "tabix",
   dbdir = opts$out_dir
