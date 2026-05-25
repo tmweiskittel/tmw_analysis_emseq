@@ -19,7 +19,7 @@ dependencies:
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
   
-  - r-data.table
+  - r-data.table=1.14.8
   - r-optparse
   - r-readr
   - r-stringr
