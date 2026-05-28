@@ -77,6 +77,8 @@ The [profiles `README.md`](profiles/README.md) provides more details.
 - Update the `README.md` badges. Add or remove badges for `conda`/`singularity`/`apptainer` usage depending on the workflow's [deployment](#deployment-options) options.
 - Do not forget to also adjust the configuration-specific `config/README.md` file.
 
+- remove methyldackel rule from this pipeline and add to analysis
+
 ## Troubleshooting
 To address enviorment build errors related to Mayo WSS SSL decryption
 ```bash
@@ -85,3 +87,4 @@ export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 conda config --set ssl_verify /usr/local/share/ca-certificates/CertEmulationCA.crt
 ```
+
