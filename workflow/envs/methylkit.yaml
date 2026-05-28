@@ -15,6 +15,9 @@ dependencies:
   - tabix
 
   - r-base=4.3
+  - r-argparse
+  - r-optparse
+  - r-data.table
   - bioconductor-methylkit
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
