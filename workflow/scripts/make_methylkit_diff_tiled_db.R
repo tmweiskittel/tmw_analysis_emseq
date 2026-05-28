@@ -50,7 +50,7 @@ mbase <- unite(
   destrand = FALSE,
   min.per.group = opts$min_per_group,
   mc.cores = opts$cores,
-  save.db = TRUE,
+  save.db = FALSE,
   dbdir = opts$out_dir,
   suffix = paste0(opts$suffix, ".tiled")
 )
@@ -58,7 +58,7 @@ mbase <- unite(
 calculateDiffMeth(
   mbase,
   mc.cores = opts$cores,
-  save.db = TRUE,
+  save.db = FALSE,
   dbdir = opts$out_dir,
   suffix = paste0(opts$suffix, ".tiled")
 )
