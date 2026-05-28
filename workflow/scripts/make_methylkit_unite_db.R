@@ -47,7 +47,7 @@ meth <- methRead(
 
 mbase <- unite(
   meth,
-  destrand = TRUE,
+  destrand = FALSE,
   chunk.size = opts$chunk_size,
   min.per.group = opts$min_per_group,
   mc.cores = opts$cores,
