@@ -59,7 +59,7 @@ mdiff= calculateDiffMeth(
   mc.cores = opts$cores,
   save.db = TRUE,
   dbdir = opts$out_dir,
-  suffix = paste0(opts$suffix, ".tiled")
+  suffix = ""
 )
 
 mbase_out <- file.path(opts$out_dir, paste0("methylBase_", opts$suffix, ".tiled.txt"))
