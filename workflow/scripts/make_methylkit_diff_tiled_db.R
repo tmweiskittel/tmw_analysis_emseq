@@ -49,7 +49,7 @@ mbase <- unite(
   destrand = FALSE,
   min.per.group = opts$min_per_group,
   mc.cores = opts$cores,
-  save.db = FALSE,
+  save.db = TRUE,
   dbdir = opts$out_dir,
   suffix = paste0(opts$suffix, ".tiled")
 )
@@ -57,7 +57,7 @@ mbase <- unite(
 mdiff= calculateDiffMeth(
   mbase,
   mc.cores = opts$cores,
-  save.db = FALSE,
+  save.db = TRUE,
   dbdir = opts$out_dir,
   suffix = paste0(opts$suffix, ".tiled")
 )
@@ -65,5 +65,3 @@ mdiff= calculateDiffMeth(
 mbase_out <- file.path(opts$out_dir, paste0("methylBase_", opts$suffix, ".tiled.txt"))
 mdiff_out <- file.path(opts$out_dir, paste0("methylDiff_", opts$suffix, ".tiled.txt"))
 
-save.db(mbase, file = mbase_out, dbtype = "tabix", tabix = TRUE)
-save.db(mdiff, file = mdiff_out, dbtype = "tabix", tabix = TRUE)
