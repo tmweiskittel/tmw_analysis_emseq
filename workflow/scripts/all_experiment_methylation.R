@@ -13,7 +13,7 @@ opts <- parse_args(OptionParser(option_list = list(
 
 dir.create(dirname(opts$out_file), recursive = TRUE, showWarnings = FALSE)
 
-mbase <- readMethylBaseDB(opts$db_file)
+mbase <- readMethylDB(opts$db_file)
 df <- as.data.table(getData(mbase))
 
 coverage_cols <- grep("\\.coverage$", names(df), value = TRUE)
