@@ -171,14 +171,9 @@ def differential_methylation_outputs():
     outputs = []
 
     for contrast in enabled_contrasts_for_analysis("differential_methylation"):
-        outputs.extend([
-            f"{D_OUT}/dmr/diff/methylBase_{contrast}.txt.bgz",
-            f"{D_OUT}/dmr/diff/methylDiff_{contrast}.txt.bgz",
-            f"{D_OUT}/dmr/diff/methylBase_{contrast}.tiled.txt.bgz",
-            f"{D_OUT}/dmr/diff/methylDiff_{contrast}.tiled.txt.bgz",
-            f"{D_OUT}/dmr/diff/{contrast}_pos_meth.tsv",
-            f"{D_OUT}/dmr/annotation/{contrast}_annotated.tsv",
-        ])
+        outputs.append(
+            f"{D_OUT}/upload/{contrast}.upload.done"
+        )
 
     return outputs
 
