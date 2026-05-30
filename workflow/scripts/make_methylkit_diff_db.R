@@ -15,7 +15,7 @@ opts <- parse_args(OptionParser(option_list = list(
 
 dir.create(opts$out_dir, recursive = TRUE, showWarnings = FALSE)
 
-mbase <- readMethylBaseDB(opts$mbase)
+mbase <- readMethylDB(opts$mbase)
 
 calculateDiffMeth(
   mbase,
