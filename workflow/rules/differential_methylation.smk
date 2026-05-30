@@ -141,6 +141,8 @@ rule methylkit_diff_tiled:
           --win_size {params.win_size} \
           --min_per_group {params.min_per_group} \
           --chunk_size {params.chunk_size}
+        ls -lh "$(dirname "{output.unite}")"/*{wildcards.experiment}*tiled* >&2
+            
         """
 
 
