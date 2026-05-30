@@ -15,7 +15,7 @@ opts <- parse_args(OptionParser(option_list = list(
 
 dir.create(dirname(opts$out), recursive = TRUE, showWarnings = FALSE)
 
-mdiff <- readMethylDiffDB(opts$db)
+mdiff <- readMethylDB(opts$db)
 df <- as.data.table(getData(mdiff))
 
 # Placeholder annotation fields; reference-based gene/TSS annotation can be added later.
