@@ -87,6 +87,20 @@ rule methylkit_diff:
           --out_dir "$(dirname "{output.mdiff}")" \
           --suffix {wildcards.experiment} \
           --chunk_size {params.chunk_size}
+        actual_diff=$(ls -t "$(dirname "{output.mdiff}")"/methylDiff_{wildcards.experiment}*.txt.bgz | head -n 1)
+
+        if [ -z "$actual_diff" ]; then
+            echo "ERROR: Could not find methylDiff output"
+            ls -lh "$(dirname "{output.mdiff}")"
+            exit 1
+        fi
+
+        mv "$actual_diff" "{output.mdiff}"
+
+        if [ -f "$actual_diff.tbi" ]; then
+            mv "$actual_diff.tbi" "{output.mdiff}.tbi"
+        fi
+
         """
 
 
