@@ -141,7 +141,19 @@ rule methylkit_diff_tiled:
           --win_size {params.win_size} \
           --min_per_group {params.min_per_group} \
           --chunk_size {params.chunk_size}
-        ls -lh "$(dirname "{output.unite}")"/*{wildcards.experiment}*tiled* >&2
+        actual_diff=$(ls -t "$(dirname "{output.diff}")"/methylDiff_{wildcards.experiment}.tiled*.txt.bgz | head -n 1)
+
+        if [ -z "$actual_diff" ]; then
+            echo "ERROR: Could not find methylDiff tiled output"
+            ls -lh "$(dirname "{output.diff}")"
+            exit 1
+        fi
+
+        mv "$actual_diff" "{output.diff}"
+
+        if [ -f "$actual_diff.tbi" ]; then
+            mv "$actual_diff.tbi" "{output.diff}.tbi"
+        fi
             
         """
 
