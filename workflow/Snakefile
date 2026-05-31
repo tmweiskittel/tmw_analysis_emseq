@@ -183,12 +183,14 @@ def enabled_outputs():
     outputs.extend(differential_methylation_outputs())
     return outputs
 
+include: "rules/download_differential_methylation.smk"
+include: "rules/setup_differential_methylation.smk"
+include: "rules/differential_methylation.smk"
+include: "rules/cloud_upload.smk"
 
 rule all:
     input:
         enabled_outputs()
 
 
-include: "rules/download_differential_methylation.smk"
-include: "rules/setup_differential_methylation.smk"
-include: "rules/differential_methylation.smk"
+
