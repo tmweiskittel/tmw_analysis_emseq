@@ -33,7 +33,7 @@ rule methylkit_unite:
         32
     output:
         mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"),
-        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi"),
+        mbase_tbi=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi"),
 
     shell:
         """
