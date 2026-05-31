@@ -32,8 +32,8 @@ rule methylkit_unite:
     threads:
         32
     output:
-        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz")
-        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi")
+        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"),
+        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi"),
 
     shell:
         """
@@ -75,8 +75,8 @@ rule methylkit_diff:
     threads:
         32
     output:
-        mdiff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz")
-        mdiff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz.tbi")
+        mdiff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"),
+        mdiff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz.tbi"),
 
     shell:
         """
@@ -139,9 +139,9 @@ rule methylkit_diff_tiled:
         32
     output:
         unite=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz"),
-        diff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz")
+        diff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz"),
         unite_tbi=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz.tbi"),
-        diff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi")
+        diff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi"),
     shell:
         """
         exec &>> "{log.cmd}"
