@@ -32,7 +32,7 @@ rule methylkit_unite:
     threads:
         32
     output:
-        mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
+        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz")
     shell:
         """
         exec &>> "{log.cmd}"
@@ -73,7 +73,7 @@ rule methylkit_diff:
     threads:
         32
     output:
-        mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"
+        mdiff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz")
     shell:
         """
         exec &>> "{log.cmd}"
@@ -134,8 +134,8 @@ rule methylkit_diff_tiled:
     threads:
         32
     output:
-        unite=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz",
-        diff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz"
+        unite=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz"),
+        diff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz")
     shell:
         """
         exec &>> "{log.cmd}"
@@ -190,7 +190,7 @@ rule methylkit_meth_extract:
     threads:
         1
     output:
-        tsv=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv"
+        tsv=temp(f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv")
     shell:
         """
         exec &>> "{log.cmd}"
@@ -221,7 +221,7 @@ rule methylkit_annotate_cpg:
     threads:
         1
     output:
-        tsv=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
+        tsv=temp(f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv")
     shell:
         """
         exec &>> "{log.cmd}"
