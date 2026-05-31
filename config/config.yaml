@@ -14,8 +14,8 @@ emseq_ref_name: "hg38"
 align_method: "bwameth"
 
 meta:
-  results_bucket: "<bucket-name>"
-  results_prefix: "<folder-path-inside-bucket>"
+  results_bucket: "weiskittel-projects1"
+  results_prefix: "radnecrosis/diff_methyl_analysis"
   
 params:
   min_coverage: 5
