@@ -172,7 +172,7 @@ def differential_methylation_outputs():
 
     for contrast in enabled_contrasts_for_analysis("differential_methylation"):
         outputs.append(
-            f"{D_OUT}/upload/{{experiment}}.upload.done"
+            f"{D_OUT}/upload/{{contrast}}.upload.done"
         )
 
     return outputs
