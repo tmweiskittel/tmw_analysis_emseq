@@ -11,7 +11,7 @@ rule upload_differential_methylation_results:
         matrix=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv",
         annotation=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
     output:
-        done=f"{D_OUT}/upload/{{contrast}}.upload.done"
+        done=f"{D_OUT}/upload/{{experiment}}.upload.done"
     params:
         bucket=config["meta"]["results_bucket"],
         prefix=config["meta"]["results_prefix"]
