@@ -1,6 +1,6 @@
-samples_csv: "config/radnec_sampleloc2.csv"
-sample_contrasts_csv: "config/radnec_samplecon2.csv"
-analysis_matrix_csv: "config/radnec_analysis2.csv"
+samples_csv: "config/radnec_sampleloc3.csv"
+sample_contrasts_csv: "config/radnec_samplecon3.csv"
+analysis_matrix_csv: "config/radnec_analysis3.csv"
 
 annotation_gtf_url: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_49/gencode.v49.basic.annotation.gtf.gz"
 annotation_gtf: "resources/gencode.v49.basic.annotation.gtf.gz"
