@@ -1,5 +1,4 @@
 ﻿sample,gcs_sample_dir
-C56,gs://weiskittel-projects1/radnecrosis/processed/C56
 C65,gs://weiskittel-projects1/radnecrosis/processed/C65
 C63,gs://weiskittel-projects1/radnecrosis/processed/C63
 C45,gs://weiskittel-projects1/radnecrosis/processed/C45
@@ -11,12 +10,10 @@ C50,gs://weiskittel-projects1/radnecrosis/processed/C50
 C39,gs://weiskittel-projects1/radnecrosis/processed/C39
 C43,gs://weiskittel-projects1/radnecrosis/processed/C43
 C51,gs://weiskittel-projects1/radnecrosis/processed/C51
-C48,gs://weiskittel-projects1/radnecrosis/processed/C48
 C60,gs://weiskittel-projects1/radnecrosis/processed/C60
 C58,gs://weiskittel-projects1/radnecrosis/processed/C58
 C47,gs://weiskittel-projects1/radnecrosis/processed/C47
 C52,gs://weiskittel-projects1/radnecrosis/processed/C52
-P34,gs://weiskittel-projects1/radnecrosis/processed/P34
 P20,gs://weiskittel-projects1/radnecrosis/processed/P20
 P14,gs://weiskittel-projects1/radnecrosis/processed/P14
 P4,gs://weiskittel-projects1/radnecrosis/processed/P4

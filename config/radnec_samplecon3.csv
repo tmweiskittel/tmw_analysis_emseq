@@ -1,5 +1,4 @@
 ﻿sample,recurrpla_vs_primpla,recurrpla_vs_trtpla,recurrcsf_vs_primcsf,recurrcsf_vs_trtcsf
-C56,NA,NA,primcsf,NA
 C65,NA,NA,primcsf,NA
 C63,NA,NA,primcsf,NA
 C45,NA,NA,primcsf,NA
@@ -11,12 +10,10 @@ C50,NA,NA,recurrcsf,recurrcsf
 C39,NA,NA,recurrcsf,recurrcsf
 C43,NA,NA,recurrcsf,recurrcsf
 C51,NA,NA,recurrcsf,recurrcsf
-C48,NA,NA,recurrcsf,recurrcsf
 C60,NA,NA,recurrcsf,recurrcsf
 C58,NA,NA,NA,trtcsf
 C47,NA,NA,NA,trtcsf
 C52,NA,NA,NA,trtcsf
-P34,primpla,NA,NA,NA
 P20,primpla,NA,NA,NA
 P14,primpla,NA,NA,NA
 P4,primpla,NA,NA,NA
