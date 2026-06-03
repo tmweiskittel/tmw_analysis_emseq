@@ -196,7 +196,7 @@ rule methylkit_meth_extract:
     threads:
         1
     resources:
-        mem_mb=64000
+        mem_mb=512000
     output:
         tsv=temp(f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv")
     shell:
