@@ -195,6 +195,8 @@ rule methylkit_meth_extract:
         script=f"{R_EMSEQ}/scripts/all_experiment_methylation.R"
     threads:
         1
+    resources:
+        mem_mb=64000
     output:
         tsv=temp(f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv")
     shell:
