@@ -21,6 +21,8 @@ dependencies:
   - bioconductor-methylkit
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
+  - bioconductor-iranges
+  - bioconductor-s4vectors
   
   - r-data.table=1.14.8
   - r-optparse
