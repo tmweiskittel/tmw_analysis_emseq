@@ -166,6 +166,12 @@ def local_methylkit_db_for_sample(sample):
 def local_methylkit_tbi_for_sample(sample):
     return local_methylkit_db_for_sample(sample) + ".tbi"
 
+def qc_summary_gcs_for_sample(sample):
+    return f"{gcs_sample_dir(sample)}/{sample}.qc_summary.tsv"
+
+
+def local_qc_summary_for_sample(sample):
+    return f"{D_WORK}/qc/{sample}.qc_summary.tsv"
 
 def differential_methylation_outputs():
     outputs = []
@@ -177,10 +183,20 @@ def differential_methylation_outputs():
 
     return outputs
 
+def qc_summary_outputs():
+    outputs = []
+
+    for contrast in enabled_contrasts_for_analysis("qc_summary"):
+        outputs.append(
+            f"{D_OUT}/upload/{contrast}.qc_summary.upload.done"
+        )
+
+    return outputs
 
 def enabled_outputs():
     outputs = []
     outputs.extend(differential_methylation_outputs())
+    outputs.extend(qc_summary_outputs())
     return outputs
 
 include: "rules/download_differential_methylation.smk"
