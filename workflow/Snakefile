@@ -202,7 +202,9 @@ def enabled_outputs():
 include: "rules/download_differential_methylation.smk"
 include: "rules/setup_differential_methylation.smk"
 include: "rules/differential_methylation.smk"
+include: "rules/qc_summary.smk"
 include: "rules/cloud_upload.smk"
+
 
 rule all:
     input:
