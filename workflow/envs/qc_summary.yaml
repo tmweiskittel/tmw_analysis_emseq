@@ -1,0 +1,9 @@
+name: qc_summary
+
+channels:
+  - conda-forge
+
+dependencies:
+  - r-base
+  - r-optparse
+  - r-data.table
