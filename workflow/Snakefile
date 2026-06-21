@@ -232,13 +232,15 @@ def enabled_outputs():
     outputs.extend(ichor_outputs())
     return outputs
 
+################################################################################### rule inclusion
 include: "rules/download_differential_methylation.smk"
 include: "rules/setup_differential_methylation.smk"
 include: "rules/differential_methylation.smk"
 include: "rules/qc_summary.smk"
 include: "rules/cloud_upload.smk"
+include: "rules/ichor_cna.smk"
 
-
+################################################################################### rule all
 rule all:
     input:
         enabled_outputs()
