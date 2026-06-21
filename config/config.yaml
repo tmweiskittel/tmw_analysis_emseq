@@ -20,3 +20,13 @@ meta:
 params:
   min_coverage: 5
   qvalue_cutoff: 0.05
+
+ichor:
+  window: 1000000
+  quality: 20
+  genome: "hg38"
+  gc_wig: "resources/ichor/hg38.gc.1000kb.wig"
+  map_wig: "resources/ichor/hg38.map.1000kb.wig"
+  normal_panel: "resources/ichor/hg38.1000kb.normalPanel.rds"
+  ploidy: "c(2)"
+  normal: "c(0.5,0.6,0.7,0.8,0.9,0.95)"
