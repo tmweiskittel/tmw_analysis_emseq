@@ -4,8 +4,6 @@ channels:
   - conda-forge
   - bioconda
 
-channel_priority: strict
-
 dependencies:
   - ca-certificates
   - certifi
@@ -17,14 +15,12 @@ dependencies:
   - r-base=4.3
   - r-argparse
   - r-optparse
-  - r-data.table
+  - r-readr
+  - r-stringr
+  - r-data.table=1.14.8
+
   - bioconductor-methylkit
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
   - bioconductor-iranges
   - bioconductor-s4vectors
-  
-  - r-data.table=1.14.8
-  - r-optparse
-  - r-readr
-  - r-stringr
