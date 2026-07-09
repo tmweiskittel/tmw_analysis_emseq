@@ -20,6 +20,7 @@ dependencies:
   - r-data.table=1.14.8
 
   - bioconductor-methylkit
+  - bioconductor-genomeinfodbdata=1.2.11
   - bioconductor-genomicranges
   - bioconductor-rtracklayer
   - bioconductor-iranges
