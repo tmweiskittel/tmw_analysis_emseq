@@ -28,7 +28,7 @@ p <- ggplot(mdiff, aes(x = meth.diff)) +
     ylab("CpG count")
 
 ggsave(
-    filename = file.path(FIG_DIR, "methylation_difference_histogram.png"),
+    filename = file.path(FIG_DIR, paste0(experiment, "methylation_difference_histogram.png")),
     plot = p,
     width = 8,
     height = 6,
@@ -44,7 +44,7 @@ p <- ggplot(mdiff,
     ylab("-log10(q-value)")
 
 ggsave(
-    file.path(FIG_DIR, "volcano_plot.png"),
+    file.path(FIG_DIR, paste0(experiment, "volcano_plot.png")),
     p,
     width = 8,
     height = 6,
@@ -63,7 +63,7 @@ p <- ggplot(mdiff,
     theme_bw()
 
 ggsave(
-    file.path(FIG_DIR, "manhattan_plot.png"),
+    file.path(FIG_DIR, paste0(experiment,"manhattan_plot.png")),
     p,
     width = 14,
     height = 8,
@@ -90,7 +90,7 @@ p <- ggplot(pca_df,
     theme_bw()
 
 ggsave(
-    file.path(FIG_DIR, "PCA.png"),
+    file.path(FIG_DIR, paste0(experiment, "PCA.png")),
     p,
     width = 7,
     height = 6,
@@ -115,7 +115,7 @@ p <- ggplot(umap_df,
     theme_bw()
 
 ggsave(
-    file.path(FIG_DIR, "UMAP.png"),
+    file.path(FIG_DIR, paste0(experiment, "UMAP.png")),
     p,
     width = 7,
     height = 6,
@@ -139,7 +139,7 @@ heat <- as.matrix(heat)
 heat <- t(scale(t(heat)))
 
 png(
-    filename = file.path(FIG_DIR, "Top500_heatmap.png"),
+    filename = file.path(FIG_DIR, paste0(experiment,"Top500_heatmap.png")),
     width = 2400,
     height = 3000,
     res = 300
@@ -163,7 +163,7 @@ if ("annotation" %in% names(annot)) {
         theme_bw()
 
     ggsave(
-        file.path(FIG_DIR, "annotation_distribution.png"),
+        file.path(FIG_DIR, paste0(experiment, "annotation_distribution.png")),
         p,
         width = 8,
         height = 6,
@@ -182,24 +182,24 @@ summary_stats <- data.frame(
 
 write.csv(
     summary_stats,
-    file.path(FIG_DIR, "summary_statistics.csv"),
+    file.path(FIG_DIR,paste0(experiment, "summary_statistics.csv")),
     row.names = FALSE
 )
 
 fwrite(
     mdiff[qvalue < 0.05],
-    file.path(FIG_DIR, "significant_DMCs.tsv"),
+    file.path(FIG_DIR,paste0(experiment, "significant_DMCs.tsv")),
     sep = "\t"
 )
 
 fwrite(
     mdiff[qvalue < 0.05 & meth.diff > 10],
-    file.path(FIG_DIR, "hypermethylated_DMCs.tsv"),
+    file.path(FIG_DIR,paste0(experiment, "hypermethylated_DMCs.tsv")),
     sep = "\t"
 )
 
 fwrite(
     mdiff[qvalue < 0.05 & meth.diff < -10],
-    file.path(FIG_DIR, "hypomethylated_DMCs.tsv"),
+    file.path(FIG_DIR, paste0(experiment, "hypomethylated_DMCs.tsv")),
     sep = "\t"
 )
