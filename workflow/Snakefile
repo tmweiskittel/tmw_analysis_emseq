@@ -239,6 +239,7 @@ def ichor_outputs():
 def enabled_outputs():
     outputs = []
     outputs.extend(differential_methylation_outputs())
+    outputs.extend(differential_methylation_visualization_outputs())
     outputs.extend(qc_summary_outputs())
     outputs.extend(ichor_outputs())
     return outputs
@@ -250,6 +251,7 @@ include: "rules/differential_methylation.smk"
 include: "rules/qc_summary.smk"
 include: "rules/cloud_upload.smk"
 include: "rules/ichor_cna.smk"
+include: "rules/differential_methylation_visualization.smk"
 
 ################################################################################### rule all
 rule all:
