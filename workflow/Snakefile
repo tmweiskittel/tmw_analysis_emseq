@@ -196,6 +196,17 @@ def qc_summary_outputs():
 
     return outputs
 
+################################################################################### figure helpers 
+def differential_methylation_visualization_outputs():
+    outputs = []
+
+    for contrast in enabled_contrasts_for_analysis("differential_methylation_visualization"):
+        outputs.append(
+            f"{D_OUT}/dmr/visualization/{contrast}.visualization.done"
+        )
+
+    return outputs
+
 ################################################################################### ichorcna helpers 
 def bam_gcs_for_sample(sample):
     return f"{gcs_sample_dir(sample)}/{sample}.aligned.sorted.filt.bl.bam"
