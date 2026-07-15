@@ -9,7 +9,7 @@ rule methylkit_unite:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        "../envs/methylkit.yaml"
+        ENV_METHYLKIT
     input:
         mkit_lib_db=lambda wc: [
             local_methylkit_db_for_sample(sample)
@@ -61,8 +61,8 @@ rule methylkit_diff:
         "Calculate per-base differential methylation using methylKit"
     wildcard_constraints:
         experiment = "[^.]+"
-    conda:
-        "../envs/methylkit.yaml"
+     conda:
+        ENV_METHYLKIT
     input:
         mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
@@ -113,8 +113,8 @@ rule methylkit_diff_tiled:
         "Calculate tiled differential methylation using methylKit"
     wildcard_constraints:
         experiment = "[^.]+"
-    conda:
-        "../envs/methylkit.yaml"
+     conda:
+        ENV_METHYLKIT
     input:
         mkit_lib_db=lambda wc: [
             local_methylkit_db_for_sample(sample)
@@ -184,7 +184,7 @@ rule methylkit_meth_extract:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        "../envs/methylkit.yaml"
+        ENV_METHYLKIT
     input:
         mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
     log:
@@ -216,7 +216,7 @@ rule methylkit_annotate_cpg:
     wildcard_constraints:
         experiment = "[^.]+"
     conda:
-        "../envs/methylkit.yaml"
+        ENV_METHYLKIT
     input:
         db=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz",
         gtf=config["annotation_gtf"]
