@@ -39,6 +39,7 @@ rule upload_differential_methylation_results:
         gcloud storage cp {input.tiled_mdiff_tbi} "$DEST/" >> "{log}" 2>&1
         gcloud storage cp {input.matrix} "$DEST/" >> "{log}" 2>&1
         gcloud storage cp {input.annotation} "$DEST/" >> "{log}" 2>&1
-
+        gsutil -m cp -r {D_OUT}/dmr/visualization/{wildcards.contrast} \
+            {params.gcs_outdir}/dmr/visualization/
         touch "{output.done}"
         """
