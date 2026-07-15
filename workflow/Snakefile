@@ -4,30 +4,23 @@
 # ============================================================================
 
 import csv
+from pathlib import Path
 
 configfile: "config/config.yaml"
-
 
 D_OUT = config.get("outdir", "results")
 D_LOGS = config.get("logs", "logs")
 D_BENCHMARK = config.get("benchmark", "benchmark")
 D_WORK = config.get("workdir", "work")
 
-from pathlib import Path
-
-WORKFLOW_DIR = workflow.basedir
-R_EMSEQ = str(Path(WORKFLOW_DIR))
-
+# Workflow paths
 WORKFLOW_DIR = Path(workflow.basedir).resolve()
+R_EMSEQ = str(WORKFLOW_DIR)
 
+# Conda environments
 ENV_METHYLKIT = str(
-    WORKFLOW_DIR / config.get("env_methylkit", "envs/methylkit.yaml")
+    (WORKFLOW_DIR / config.get("env_methylkit", "envs/methylkit.yaml")).resolve()
 )
-
-from pathlib import Path
-
-WORKFLOW_DIR = workflow.basedir
-
 def clean_header(name):
     return name.strip().lstrip("\ufeff")
 
