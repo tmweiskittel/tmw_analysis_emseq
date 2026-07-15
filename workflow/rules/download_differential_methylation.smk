@@ -34,8 +34,8 @@ rule make_single_methylkit_tabix_db:
             f"{{sample}}.{config['emseq_ref_name']}."
             f"{config['align_method']}.methyldackel.txt.bgz.tbi"
         )
-    conda:
-        "../envs/methylkit.yaml"
+     conda:
+        ENV_METHYLKIT
     log:
         cmd=f"{D_LOGS}/make_single_methylkit_tabix_db/{{sample}}.log"
     params:
