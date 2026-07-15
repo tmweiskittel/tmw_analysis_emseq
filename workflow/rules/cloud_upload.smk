@@ -20,7 +20,6 @@ rule upload_differential_methylation_results:
         viz_volcano=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_volcano_plot.png",
         viz_manhattan=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_manhattan_plot.png",
         viz_tiled=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_tiled_methylation_difference.png",
-        viz_pca=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_PCA.png",
     output:
         done=f"{D_OUT}/upload/{{experiment}}.upload.done"
     params:
