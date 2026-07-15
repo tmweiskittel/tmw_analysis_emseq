@@ -262,6 +262,7 @@ rule visualize_differential_methylation:
         pca=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_PCA.png"
     params:
         outdir=lambda wildcards: f"{D_OUT}/dmr/visualization/{wildcards.experiment}",
+        benchdir=f"{D_BENCHMARK}/dmr/visualization",
         script=f"{R_EMSEQ}/scripts/visualize_differential_methylation.R",
         qvalue_cutoff=config.get("dmr_visualization", {}).get("qvalue_cutoff", 0.05),
         meth_diff_cutoff=config.get("dmr_visualization", {}).get("meth_diff_cutoff", 10),
@@ -278,7 +279,7 @@ rule visualize_differential_methylation:
         r"""
         mkdir -p "{params.outdir}"
         mkdir -p "$(dirname "{log}")"
-        mkdir -p "$(dirname "{benchmark}")"
+        mkdir -p "{params.benchdir}"
 
         Rscript "{params.script}" \
             --mdiff "{input.mdiff}" \
