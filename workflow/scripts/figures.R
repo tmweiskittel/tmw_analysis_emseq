@@ -157,6 +157,20 @@ if (length(sample_cols) >= 2) {
     dpi = 300
   )
 
+pca_file <- file.path(opt$outdir, paste0(opt$contrast, "_PCA.png"))
+
+if (!file.exists(pca_file)) {
+  png(filename = pca_file, width = 2100, height = 1800, res = 300)
+  plot.new()
+  title("PCA not generated")
+  text(
+    0.5, 0.5,
+    "PCA was skipped.\nCheck methylation matrix sample columns.",
+    cex = 1.2
+  )
+  dev.off()
+}
+
   top <- mdiff[order(qvalue)][1:min(opt$top_n_heatmap, .N)]
   top_key <- paste(top$chr, top$start, sep = "_")
 
