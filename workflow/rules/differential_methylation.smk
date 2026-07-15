@@ -61,7 +61,7 @@ rule methylkit_diff:
         "Calculate per-base differential methylation using methylKit"
     wildcard_constraints:
         experiment = "[^.]+"
-     conda:
+    conda:
         ENV_METHYLKIT
     input:
         mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"
@@ -113,7 +113,7 @@ rule methylkit_diff_tiled:
         "Calculate tiled differential methylation using methylKit"
     wildcard_constraints:
         experiment = "[^.]+"
-     conda:
+    conda:
         ENV_METHYLKIT
     input:
         mkit_lib_db=lambda wc: [
