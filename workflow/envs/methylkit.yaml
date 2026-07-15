@@ -19,6 +19,8 @@ dependencies:
   - r-stringr
   - r-data.table=1.14.8
   - r-pheatmap
+  - uwot
+
 
   - bioconductor-methylkit
   - bioconductor-genomeinfodbdata=1.2.11
