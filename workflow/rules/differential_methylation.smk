@@ -263,7 +263,7 @@ rule visualize_differential_methylation:
     params:
         outdir=lambda wildcards: f"{D_OUT}/dmr/visualization/{wildcards.experiment}",
         benchdir=f"{D_BENCHMARK}/dmr/visualization",
-        script=f"{R_EMSEQ}/scripts/visualize_differential_methylation.R",
+        script=f"{R_EMSEQ}/scripts/figures.R",
         qvalue_cutoff=config.get("dmr_visualization", {}).get("qvalue_cutoff", 0.05),
         meth_diff_cutoff=config.get("dmr_visualization", {}).get("meth_diff_cutoff", 10),
         top_n_heatmap=config.get("dmr_visualization", {}).get("top_n_heatmap", 500)
