@@ -259,7 +259,6 @@ rule visualize_differential_methylation:
         volcano=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_volcano_plot.png",
         manhattan=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_manhattan_plot.png",
         tiled_meth_diff=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_tiled_methylation_difference.png",
-        pca=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_PCA.png"
     params:
         outdir=lambda wildcards: f"{D_OUT}/dmr/visualization/{wildcards.experiment}",
         benchdir=f"{D_BENCHMARK}/dmr/visualization",
