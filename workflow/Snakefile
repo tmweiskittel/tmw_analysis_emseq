@@ -251,7 +251,6 @@ include: "rules/differential_methylation.smk"
 include: "rules/qc_summary.smk"
 include: "rules/cloud_upload.smk"
 include: "rules/ichor_cna.smk"
-include: "rules/differential_methylation_visualization.smk"
 
 ################################################################################### rule all
 rule all:
