@@ -18,8 +18,11 @@ from pathlib import Path
 WORKFLOW_DIR = workflow.basedir
 R_EMSEQ = str(Path(WORKFLOW_DIR))
 
-# do I still need this variable? recheck later
-ENV_METHYLKIT = config.get("env_methylkit", "envs/methylkit.yaml")
+WORKFLOW_DIR = Path(workflow.basedir).resolve()
+
+ENV_METHYLKIT = str(
+    WORKFLOW_DIR / config.get("env_methylkit", "envs/methylkit.yaml")
+)
 
 from pathlib import Path
 
