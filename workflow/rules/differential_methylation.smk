@@ -243,54 +243,54 @@ rule methylkit_annotate_cpg:
 
 rule visualize_differential_methylation:
     input:
-        mdiff = f"{D_OUT}/dmr/diff/methylDiff_{{contrast}}.txt.bgz",
-        mdiff_tbi = f"{D_OUT}/dmr/diff/methylDiff_{{contrast}}.txt.bgz.tbi",
-        tiled_mdiff = f"{D_OUT}/dmr/diff/methylDiff_{{contrast}}.tiled.txt.bgz",
-        tiled_mdiff_tbi = f"{D_OUT}/dmr/diff/methylDiff_{{contrast}}.tiled.txt.bgz.tbi",
-        matrix = f"{D_OUT}/dmr/diff/{{contrast}}_pos_meth.tsv",
-        annotation = f"{D_OUT}/dmr/annotation/{{contrast}}_annotated.tsv"
+        mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz",
+        mdiff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz.tbi",
+        tiled_mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz",
+        tiled_mdiff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi",
+        matrix=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv",
+        annotation=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
     output:
-        done = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}.visualization.done",
-        summary = f"{D_OUT}/dmr/visualization/{{contrast}}/summary_statistics.csv",
-        sig = f"{D_OUT}/dmr/visualization/{{contrast}}/significant_DMCs.tsv",
-        hyper = f"{D_OUT}/dmr/visualization/{{contrast}}/hypermethylated_DMCs.tsv",
-        hypo = f"{D_OUT}/dmr/visualization/{{contrast}}/hypomethylated_DMCs.tsv",
-        meth_diff_hist = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}_methylation_difference_histogram.png",
-        volcano = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}_volcano_plot.png",
-        manhattan = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}_manhattan_plot.png",
-        tiled_meth_diff = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}_tiled_methylation_difference.png",
-        pca = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}_PCA.png"
+        done=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}.visualization.done",
+        summary=f"{D_OUT}/dmr/visualization/{{experiment}}/summary_statistics.csv",
+        sig=f"{D_OUT}/dmr/visualization/{{experiment}}/significant_DMCs.tsv",
+        hyper=f"{D_OUT}/dmr/visualization/{{experiment}}/hypermethylated_DMCs.tsv",
+        hypo=f"{D_OUT}/dmr/visualization/{{experiment}}/hypomethylated_DMCs.tsv",
+        meth_diff_hist=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_methylation_difference_histogram.png",
+        volcano=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_volcano_plot.png",
+        manhattan=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_manhattan_plot.png",
+        tiled_meth_diff=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_tiled_methylation_difference.png",
+        pca=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_PCA.png"
     params:
-        outdir = lambda wildcards: f"{D_OUT}/dmr/visualization/{wildcards.contrast}",
-        script = f"{R_EMSEQ}/scripts/visualize_differential_methylation.R",
-        qvalue_cutoff = config.get("dmr_visualization", {}).get("qvalue_cutoff", 0.05),
-        meth_diff_cutoff = config.get("dmr_visualization", {}).get("meth_diff_cutoff", 10),
-        top_n_heatmap = config.get("dmr_visualization", {}).get("top_n_heatmap", 500)
+        outdir=lambda wildcards: f"{D_OUT}/dmr/visualization/{wildcards.experiment}",
+        script=f"{R_EMSEQ}/scripts/visualize_differential_methylation.R",
+        qvalue_cutoff=config.get("dmr_visualization", {}).get("qvalue_cutoff", 0.05),
+        meth_diff_cutoff=config.get("dmr_visualization", {}).get("meth_diff_cutoff", 10),
+        top_n_heatmap=config.get("dmr_visualization", {}).get("top_n_heatmap", 500)
     log:
-        f"{D_LOGS}/dmr/visualization/{{contrast}}.log"
+        f"{D_LOGS}/dmr/visualization/{{experiment}}.log"
     benchmark:
-        f"{D_BENCHMARK}/dmr/visualization/{{contrast}}.tsv"
+        f"{D_BENCHMARK}/dmr/visualization/{{experiment}}.tsv"
     conda:
         ENV_METHYLKIT
     threads:
         4
     shell:
         r"""
-        mkdir -p {params.outdir}
-        mkdir -p $(dirname {log})
-        mkdir -p $(dirname {benchmark})
+        mkdir -p "{params.outdir}"
+        mkdir -p "$(dirname "{log}")"
+        mkdir -p "$(dirname "{benchmark}")"
 
-        Rscript {params.script} \
-            --mdiff {input.mdiff} \
-            --tiled-mdiff {input.tiled_mdiff} \
-            --matrix {input.matrix} \
-            --annotation {input.annotation} \
-            --outdir {params.outdir} \
-            --contrast {wildcards.contrast} \
-            --qvalue-cutoff {params.qvalue_cutoff} \
-            --meth-diff-cutoff {params.meth_diff_cutoff} \
-            --top-n-heatmap {params.top_n_heatmap} \
-            > {log} 2>&1
+        Rscript "{params.script}" \
+            --mdiff "{input.mdiff}" \
+            --tiled-mdiff "{input.tiled_mdiff}" \
+            --matrix "{input.matrix}" \
+            --annotation "{input.annotation}" \
+            --outdir "{params.outdir}" \
+            --contrast "{wildcards.experiment}" \
+            --qvalue-cutoff "{params.qvalue_cutoff}" \
+            --meth-diff-cutoff "{params.meth_diff_cutoff}" \
+            --top-n-heatmap "{params.top_n_heatmap}" \
+            > "{log}" 2>&1
 
-        touch {output.done}
+        touch "{output.done}"
         """
