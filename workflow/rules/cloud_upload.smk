@@ -9,7 +9,12 @@ rule upload_differential_methylation_results:
         tiled_mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz",
         tiled_mdiff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi",
         matrix=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv",
-        annotation=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
+        annotation=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv",
+        viz_done = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}.visualization.done",
+        viz_summary = f"{D_OUT}/dmr/visualization/{{contrast}}/summary_statistics.csv",
+        viz_sig = f"{D_OUT}/dmr/visualization/{{contrast}}/significant_DMCs.tsv",
+        viz_hyper = f"{D_OUT}/dmr/visualization/{{contrast}}/hypermethylated_DMCs.tsv",
+        viz_hypo = f"{D_OUT}/dmr/visualization/{{contrast}}/hypomethylated_DMCs.tsv",
     output:
         done=f"{D_OUT}/upload/{{experiment}}.upload.done"
     params:
