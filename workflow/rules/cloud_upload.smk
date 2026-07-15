@@ -10,11 +10,17 @@ rule upload_differential_methylation_results:
         tiled_mdiff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi",
         matrix=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv",
         annotation=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv",
-        viz_done = f"{D_OUT}/dmr/visualization/{{contrast}}/{{contrast}}.visualization.done",
-        viz_summary = f"{D_OUT}/dmr/visualization/{{contrast}}/summary_statistics.csv",
-        viz_sig = f"{D_OUT}/dmr/visualization/{{contrast}}/significant_DMCs.tsv",
-        viz_hyper = f"{D_OUT}/dmr/visualization/{{contrast}}/hypermethylated_DMCs.tsv",
-        viz_hypo = f"{D_OUT}/dmr/visualization/{{contrast}}/hypomethylated_DMCs.tsv",
+
+        viz_done=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}.visualization.done",
+        viz_summary=f"{D_OUT}/dmr/visualization/{{experiment}}/summary_statistics.csv",
+        viz_sig=f"{D_OUT}/dmr/visualization/{{experiment}}/significant_DMCs.tsv",
+        viz_hyper=f"{D_OUT}/dmr/visualization/{{experiment}}/hypermethylated_DMCs.tsv",
+        viz_hypo=f"{D_OUT}/dmr/visualization/{{experiment}}/hypomethylated_DMCs.tsv",
+        viz_meth_diff_hist=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_methylation_difference_histogram.png",
+        viz_volcano=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_volcano_plot.png",
+        viz_manhattan=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_manhattan_plot.png",
+        viz_tiled=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_tiled_methylation_difference.png",
+        viz_pca=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_PCA.png",
     output:
         done=f"{D_OUT}/upload/{{experiment}}.upload.done"
     params:
@@ -39,7 +45,10 @@ rule upload_differential_methylation_results:
         gcloud storage cp {input.tiled_mdiff_tbi} "$DEST/" >> "{log}" 2>&1
         gcloud storage cp {input.matrix} "$DEST/" >> "{log}" 2>&1
         gcloud storage cp {input.annotation} "$DEST/" >> "{log}" 2>&1
-        gsutil -m cp -r {D_OUT}/dmr/visualization/{wildcards.contrast} \
-            {params.gcs_outdir}/dmr/visualization/
+
+        gcloud storage cp --recursive \
+            {D_OUT}/dmr/visualization/{wildcards.experiment} \
+            "$DEST/visualization/" >> "{log}" 2>&1
+
         touch "{output.done}"
         """
