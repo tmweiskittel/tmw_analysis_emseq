@@ -23,8 +23,16 @@ opt <- parse_args(OptionParser(option_list = option_list))
 
 dir.create(opt$outdir, recursive = TRUE, showWarnings = FALSE)
 
-mdiff <- fread(opt$mdiff)
-tiled_mdiff <- fread(opt$tiled_mdiff)
+read_maybe_gz <- function(path) {
+  if (grepl("\\.gz$|\\.bgz$", path)) {
+    fread(cmd = paste("zcat", shQuote(path)))
+  } else {
+    fread(path)
+  }
+}
+
+mdiff <- read_maybe_gz(opt$mdiff)
+tiled_mdiff <- read_maybe_gz(opt$tiled_mdiff)
 meth_mat <- fread(opt$matrix)
 annot <- fread(opt$annotation)
 
