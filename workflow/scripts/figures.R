@@ -1,205 +1,201 @@
-library(data.table)
-library(ggplot2)
-library(pheatmap)
-library(uwot)
+#!/usr/bin/env Rscript
 
-experiment <- "YOUR_EXPERIMENT"
-D_OUT <- "PATH_TO_OUTPUT"
+suppressPackageStartupMessages({
+  library(data.table)
+  library(ggplot2)
+  library(pheatmap)
+  library(optparse)
+})
 
-FIG_DIR <- file.path(D_OUT, "figures", experiment)
-dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
-
-mdiff <- fread(file.path(D_OUT, "dmr/diff",
-                         paste0("methylDiff_", experiment, ".txt.bgz")))
-
-tiled_mdiff <- fread(file.path(D_OUT, "dmr/diff",
-                               paste0("methylDiff_", experiment, ".tiled.txt.bgz")))
-
-meth_mat <- fread(file.path(D_OUT, "dmr/diff",
-                            paste0(experiment, "_pos_meth.tsv")))
-
-annot <- fread(file.path(D_OUT, "dmr/annotation",
-                         paste0(experiment, "_annotated.tsv")))
-
-p <- ggplot(mdiff, aes(x = meth.diff)) +
-    geom_histogram(bins = 100) +
-    theme_bw() +
-    xlab("Methylation difference (%)") +
-    ylab("CpG count")
-
-ggsave(
-    filename = file.path(FIG_DIR, paste0(experiment, "methylation_difference_histogram.png")),
-    plot = p,
-    width = 8,
-    height = 6,
-    dpi = 300
+option_list <- list(
+  make_option("--mdiff", type = "character", dest = "mdiff"),
+  make_option("--tiled-mdiff", type = "character", dest = "tiled_mdiff"),
+  make_option("--matrix", type = "character", dest = "matrix"),
+  make_option("--annotation", type = "character", dest = "annotation"),
+  make_option("--outdir", type = "character", dest = "outdir"),
+  make_option("--contrast", type = "character", dest = "contrast"),
+  make_option("--qvalue-cutoff", type = "double", dest = "qvalue_cutoff", default = 0.05),
+  make_option("--meth-diff-cutoff", type = "double", dest = "meth_diff_cutoff", default = 10),
+  make_option("--top-n-heatmap", type = "integer", dest = "top_n_heatmap", default = 500)
 )
 
-p <- ggplot(mdiff,
-            aes(x = meth.diff,
-                y = -log10(qvalue))) +
-    geom_point(alpha = 0.35) +
-    theme_bw() +
-    xlab("Methylation difference (%)") +
-    ylab("-log10(q-value)")
+opt <- parse_args(OptionParser(option_list = option_list))
+
+dir.create(opt$outdir, recursive = TRUE, showWarnings = FALSE)
+
+mdiff <- fread(opt$mdiff)
+tiled_mdiff <- fread(opt$tiled_mdiff)
+meth_mat <- fread(opt$matrix)
+annot <- fread(opt$annotation)
+
+required_cols <- c("chr", "start", "qvalue", "meth.diff")
+missing_cols <- setdiff(required_cols, names(mdiff))
+if (length(missing_cols) > 0) {
+  stop("Missing required methylDiff columns: ", paste(missing_cols, collapse = ", "))
+}
+
+sig <- mdiff[qvalue < opt$qvalue_cutoff & abs(meth.diff) >= opt$meth_diff_cutoff]
+hyper <- sig[meth.diff > 0]
+hypo <- sig[meth.diff < 0]
+
+p <- ggplot(mdiff, aes(x = meth.diff)) +
+  geom_histogram(bins = 100) +
+  theme_bw() +
+  xlab("Methylation difference (%)") +
+  ylab("CpG count")
 
 ggsave(
-    file.path(FIG_DIR, paste0(experiment, "volcano_plot.png")),
-    p,
-    width = 8,
-    height = 6,
-    dpi = 300
+  file.path(opt$outdir, paste0(opt$contrast, "_methylation_difference_histogram.png")),
+  p,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+
+p <- ggplot(mdiff, aes(x = meth.diff, y = -log10(qvalue))) +
+  geom_point(alpha = 0.35, size = 0.6) +
+  theme_bw() +
+  xlab("Methylation difference (%)") +
+  ylab("-log10(q-value)")
+
+ggsave(
+  file.path(opt$outdir, paste0(opt$contrast, "_volcano_plot.png")),
+  p,
+  width = 8,
+  height = 6,
+  dpi = 300
 )
 
 mdiff[, chr := factor(chr, levels = unique(chr))]
 
-p <- ggplot(mdiff,
-            aes(x = start,
-                y = -log10(qvalue))) +
-    geom_point(alpha = 0.35,
-               size = 0.4) +
-    facet_wrap(~chr,
-               scales = "free_x") +
-    theme_bw()
+p <- ggplot(mdiff, aes(x = start, y = -log10(qvalue))) +
+  geom_point(alpha = 0.35, size = 0.4) +
+  facet_wrap(~ chr, scales = "free_x") +
+  theme_bw() +
+  xlab("Genomic position") +
+  ylab("-log10(q-value)")
 
 ggsave(
-    file.path(FIG_DIR, paste0(experiment,"manhattan_plot.png")),
+  file.path(opt$outdir, paste0(opt$contrast, "_manhattan_plot.png")),
+  p,
+  width = 14,
+  height = 8,
+  dpi = 300
+)
+
+if (all(c("chr", "start", "meth.diff") %in% names(tiled_mdiff))) {
+  tiled_mdiff[, chr := factor(chr, levels = unique(chr))]
+
+  p <- ggplot(tiled_mdiff, aes(x = start, y = meth.diff)) +
+    geom_point(alpha = 0.35, size = 0.4) +
+    facet_wrap(~ chr, scales = "free_x") +
+    theme_bw() +
+    xlab("Genomic position") +
+    ylab("Tiled methylation difference (%)")
+
+  ggsave(
+    file.path(opt$outdir, paste0(opt$contrast, "_tiled_methylation_difference.png")),
     p,
     width = 14,
     height = 8,
     dpi = 300
-)
+  )
+}
 
 num_cols <- names(meth_mat)[sapply(meth_mat, is.numeric)]
+coord_cols <- intersect(c("chr", "start", "end"), names(meth_mat))
+sample_cols <- setdiff(num_cols, coord_cols)
 
-mat <- as.matrix(meth_mat[, ..num_cols])
-mat <- t(scale(t(mat)))
+if (length(sample_cols) >= 2) {
+  mat <- as.matrix(meth_mat[, ..sample_cols])
+  rownames(mat) <- paste(meth_mat$chr, meth_mat$start, sep = "_")
 
-pca <- prcomp(t(mat))
+  row_sd <- apply(mat, 1, sd, na.rm = TRUE)
+  keep <- is.finite(row_sd) & row_sd > 0
+  mat <- mat[keep, , drop = FALSE]
 
-pca_df <- data.frame(
-    sample = colnames(mat),
-    PC1 = pca$x[,1],
-    PC2 = pca$x[,2]
-)
+  mat_scaled <- t(scale(t(mat)))
 
-p <- ggplot(pca_df,
-            aes(PC1, PC2,
-                label = sample)) +
+  pca <- prcomp(t(mat_scaled), center = TRUE, scale. = FALSE)
+
+  pca_df <- data.frame(
+    sample = colnames(mat_scaled),
+    PC1 = pca$x[, 1],
+    PC2 = pca$x[, 2]
+  )
+
+  p <- ggplot(pca_df, aes(x = PC1, y = PC2, label = sample)) +
     geom_point(size = 3) +
-    theme_bw()
+    geom_text(vjust = -0.8, size = 3) +
+    theme_bw() +
+    xlab("PC1") +
+    ylab("PC2")
 
-ggsave(
-    file.path(FIG_DIR, paste0(experiment, "PCA.png")),
+  ggsave(
+    file.path(opt$outdir, paste0(opt$contrast, "_PCA.png")),
     p,
     width = 7,
     height = 6,
     dpi = 300
-)
+  )
 
-set.seed(1)
+  top <- mdiff[order(qvalue)][1:min(opt$top_n_heatmap, .N)]
+  top_key <- paste(top$chr, top$start, sep = "_")
 
-embedding <- uwot::umap(t(mat))
+  heat <- mat_scaled[rownames(mat_scaled) %in% top_key, , drop = FALSE]
 
-umap_df <- data.frame(
-    sample = colnames(mat),
-    UMAP1 = embedding[,1],
-    UMAP2 = embedding[,2]
-)
-
-p <- ggplot(umap_df,
-            aes(UMAP1,
-                UMAP2,
-                label = sample)) +
-    geom_point(size = 3) +
-    theme_bw()
-
-ggsave(
-    file.path(FIG_DIR, paste0(experiment, "UMAP.png")),
-    p,
-    width = 7,
-    height = 6,
-    dpi = 300
-)
-
-top <- mdiff[order(qvalue)][1:min(500, .N)]
-
-top_key <- paste(top$chr,
-                 top$start,
-                 sep = "_")
-
-meth_mat[, key := paste(chr,
-                        start,
-                        sep = "_")]
-
-heat <- meth_mat[key %in% top_key,
-                 ..num_cols]
-
-heat <- as.matrix(heat)
-heat <- t(scale(t(heat)))
-
-png(
-    filename = file.path(FIG_DIR, paste0(experiment,"Top500_heatmap.png")),
-    width = 2400,
-    height = 3000,
-    res = 300
-)
-
-pheatmap(
-    heat,
-    show_rownames = FALSE,
-    clustering_distance_cols = "correlation",
-    clustering_distance_rows = "euclidean"
-)
-
-dev.off()
-
-if ("annotation" %in% names(annot)) {
-
-    p <- ggplot(annot,
-                aes(annotation)) +
-        geom_bar() +
-        coord_flip() +
-        theme_bw()
-
-    ggsave(
-        file.path(FIG_DIR, paste0(experiment, "annotation_distribution.png")),
-        p,
-        width = 8,
-        height = 6,
-        dpi = 300
+  if (nrow(heat) >= 2) {
+    png(
+      filename = file.path(opt$outdir, paste0(opt$contrast, "_top", opt$top_n_heatmap, "_heatmap.png")),
+      width = 2400,
+      height = 3000,
+      res = 300
     )
+
+    pheatmap(
+      heat,
+      show_rownames = FALSE,
+      clustering_distance_cols = "correlation",
+      clustering_distance_rows = "euclidean"
+    )
+
+    dev.off()
+  }
+}
+
+annotation_col <- intersect(
+  c("annotation", "feature", "gene_annotation", "annot.type"),
+  names(annot)
+)[1]
+
+if (!is.na(annotation_col)) {
+  p <- ggplot(annot, aes(x = .data[[annotation_col]])) +
+    geom_bar() +
+    coord_flip() +
+    theme_bw() +
+    xlab("Annotation") +
+    ylab("Count")
+
+  ggsave(
+    file.path(opt$outdir, paste0(opt$contrast, "_annotation_distribution.png")),
+    p,
+    width = 8,
+    height = 6,
+    dpi = 300
+  )
 }
 
 summary_stats <- data.frame(
-    Total_CpGs = nrow(mdiff),
-    Significant = sum(mdiff$qvalue < 0.05),
-    Hypermethylated = sum(mdiff$qvalue < 0.05 &
-                          mdiff$meth.diff > 10),
-    Hypomethylated = sum(mdiff$qvalue < 0.05 &
-                         mdiff$meth.diff < -10)
+  contrast = opt$contrast,
+  total_tested = nrow(mdiff),
+  significant = nrow(sig),
+  hypermethylated = nrow(hyper),
+  hypomethylated = nrow(hypo),
+  qvalue_cutoff = opt$qvalue_cutoff,
+  meth_diff_cutoff = opt$meth_diff_cutoff
 )
 
-write.csv(
-    summary_stats,
-    file.path(FIG_DIR,paste0(experiment, "summary_statistics.csv")),
-    row.names = FALSE
-)
-
-fwrite(
-    mdiff[qvalue < 0.05],
-    file.path(FIG_DIR,paste0(experiment, "significant_DMCs.tsv")),
-    sep = "\t"
-)
-
-fwrite(
-    mdiff[qvalue < 0.05 & meth.diff > 10],
-    file.path(FIG_DIR,paste0(experiment, "hypermethylated_DMCs.tsv")),
-    sep = "\t"
-)
-
-fwrite(
-    mdiff[qvalue < 0.05 & meth.diff < -10],
-    file.path(FIG_DIR, paste0(experiment, "hypomethylated_DMCs.tsv")),
-    sep = "\t"
-)
+fwrite(summary_stats, file.path(opt$outdir, "summary_statistics.csv"))
+fwrite(sig, file.path(opt$outdir, "significant_DMCs.tsv"), sep = "\t")
+fwrite(hyper, file.path(opt$outdir, "hypermethylated_DMCs.tsv"), sep = "\t")
+fwrite(hypo, file.path(opt$outdir, "hypomethylated_DMCs.tsv"), sep = "\t")
