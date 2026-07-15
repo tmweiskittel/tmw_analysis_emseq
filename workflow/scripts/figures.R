@@ -23,16 +23,26 @@ opt <- parse_args(OptionParser(option_list = option_list))
 
 dir.create(opt$outdir, recursive = TRUE, showWarnings = FALSE)
 
-read_maybe_gz <- function(path) {
-  if (grepl("\\.gz$|\\.bgz$", path)) {
-    fread(cmd = paste("zcat", shQuote(path)))
-  } else {
-    fread(path)
+read_methylkit_bgz <- function(path) {
+  x <- fread(
+    cmd = paste("zcat", shQuote(path), "| grep -v '^#'"),
+    sep = "\t",
+    header = TRUE
+  )
+
+  if (!all(c("chr", "start", "end", "strand", "pvalue", "qvalue", "meth.diff") %in% names(x))) {
+    if (ncol(x) == 7) {
+      setnames(x, c("chr", "start", "end", "strand", "pvalue", "qvalue", "meth.diff"))
+    } else {
+      stop("Unexpected methylDiff format. Columns detected: ", paste(names(x), collapse = ", "))
+    }
   }
+
+  x
 }
 
-mdiff <- read_maybe_gz(opt$mdiff)
-tiled_mdiff <- read_maybe_gz(opt$tiled_mdiff)
+mdiff <- read_methylkit_bgz(opt$mdiff)
+tiled_mdiff <- read_methylkit_bgz(opt$tiled_mdiff)
 meth_mat <- fread(opt$matrix)
 annot <- fread(opt$annotation)
 
