@@ -35,7 +35,7 @@ rule aggregate_qc_summary:
         ),
         script=f"{R_EMSEQ}/scripts/aggregate_qc_summary.R"
     conda:
-        "../envs/qc_summary.yaml"
+        ENV_METHYLKIT
     log:
         f"{D_LOGS}/aggregate_qc_summary/{{experiment}}.log"
     shell:
