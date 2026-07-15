@@ -19,7 +19,7 @@ dependencies:
   - r-stringr
   - r-data.table=1.14.8
   - r-pheatmap
-  - uwot
+  - r-uwot
 
 
   - bioconductor-methylkit
