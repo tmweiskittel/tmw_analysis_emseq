@@ -1,6 +1,32 @@
 #!/usr/bin/env Rscript
+metadata <- system(
+  sprintf(
+    "bgzip -dc %s | grep '^#'",
+    shQuote(opts$db_file)
+  ),
+  intern = TRUE
+)
 
-mbase <- readMethylDB(opts$db_file)
+tmp_file <- tempfile(fileext = ".txt")
+on.exit(unlink(tmp_file, force = TRUE), add = TRUE)
+
+status <- system2(
+  "bgzip",
+  c("-dc", shQuote(opts$db_file)),
+  stdout = tmp_file
+)
+
+if (status != 0L) {
+  stop("Failed to decompress methylBase database")
+}
+
+df <- fread(
+  tmp_file,
+  sep = "\t",
+  header = FALSE,
+  skip = length(metadata),
+  showProgress = TRUE
+)
 
 tmp_file <- tempfile(fileext = ".txt")
 on.exit(unlink(tmp_file), add = TRUE)
