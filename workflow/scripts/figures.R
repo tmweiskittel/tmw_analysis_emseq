@@ -120,81 +120,339 @@ if (all(c("chr", "start", "meth.diff") %in% names(tiled_mdiff))) {
   )
 }
 
-num_cols <- names(meth_mat)[sapply(meth_mat, is.numeric)]
-coord_cols <- intersect(c("chr", "start", "end"), names(meth_mat))
-sample_cols <- setdiff(num_cols, coord_cols)
+# -------------------------------------------------------------------------
+# PCA and heatmap
+# -------------------------------------------------------------------------
 
-if (length(sample_cols) >= 2) {
-  mat <- as.matrix(meth_mat[, ..sample_cols])
-  rownames(mat) <- paste(meth_mat$chr, meth_mat$start, sep = "_")
+coordinate_cols <- c("chr", "start", "end", "strand")
 
-  row_sd <- apply(mat, 1, sd, na.rm = TRUE)
-  keep <- is.finite(row_sd) & row_sd > 0
-  mat <- mat[keep, , drop = FALSE]
+sample_cols <- setdiff(
+  names(meth_mat),
+  coordinate_cols
+)
 
-  mat_scaled <- t(scale(t(mat)))
+# Retain only numeric sample columns.
+sample_cols <- sample_cols[
+  vapply(
+    meth_mat[, ..sample_cols],
+    is.numeric,
+    logical(1)
+  )
+]
 
-  pca <- prcomp(t(mat_scaled), center = TRUE, scale. = FALSE)
+pca_file <- file.path(
+  opt$outdir,
+  paste0(opt$contrast, "_PCA.png")
+)
 
-  pca_df <- data.frame(
-    sample = colnames(mat_scaled),
-    PC1 = pca$x[, 1],
-    PC2 = pca$x[, 2]
+if (length(sample_cols) >= 2L) {
+  message(
+    "Preparing methylation matrix with ",
+    length(sample_cols),
+    " sample columns"
   )
 
-  p <- ggplot(pca_df, aes(x = PC1, y = PC2, label = sample)) +
-    geom_point(size = 3) +
-    geom_text(vjust = -0.8, size = 3) +
-    theme_bw() +
-    xlab("PC1") +
-    ylab("PC2")
-
-  ggsave(
-    file.path(opt$outdir, paste0(opt$contrast, "_PCA.png")),
-    p,
-    width = 7,
-    height = 6,
-    dpi = 300
+  mat <- as.matrix(
+    meth_mat[, ..sample_cols]
   )
 
-pca_file <- file.path(opt$outdir, paste0(opt$contrast, "_PCA.png"))
+  storage.mode(mat) <- "double"
 
-if (!file.exists(pca_file)) {
-  png(filename = pca_file, width = 2100, height = 1800, res = 300)
-  plot.new()
-  title("PCA not generated")
-  text(
-    0.5, 0.5,
-    "PCA was skipped.\nCheck methylation matrix sample columns.",
-    cex = 1.2
+  rownames(mat) <- paste(
+    meth_mat$chr,
+    meth_mat$start,
+    sep = "_"
   )
-  dev.off()
-}
 
-  top <- mdiff[order(qvalue)][1:min(opt$top_n_heatmap, .N)]
-  top_key <- paste(top$chr, top$start, sep = "_")
+  # Convert non-finite values to NA.
+  mat[!is.finite(mat)] <- NA_real_
 
-  heat <- mat_scaled[rownames(mat_scaled) %in% top_key, , drop = FALSE]
+  # Require methylation values for at least half of the samples.
+  minimum_observed <- max(
+    2L,
+    ceiling(ncol(mat) * 0.5)
+  )
 
-  if (nrow(heat) >= 2) {
-    png(
-      filename = file.path(opt$outdir, paste0(opt$contrast, "_top", opt$top_n_heatmap, "_heatmap.png")),
-      width = 2400,
-      height = 3000,
-      res = 300
+  observed_per_row <- rowSums(!is.na(mat))
+
+  mat <- mat[
+    observed_per_row >= minimum_observed,
+    ,
+    drop = FALSE
+  ]
+
+  message(
+    "Rows retained after missingness filter: ",
+    format(nrow(mat), big.mark = ",")
+  )
+
+  if (nrow(mat) >= 2L) {
+    # Impute missing values using each CpG's mean methylation.
+    row_means <- rowMeans(
+      mat,
+      na.rm = TRUE
     )
 
-    pheatmap(
-      heat,
-      show_rownames = FALSE,
-      clustering_distance_cols = "correlation",
-      clustering_distance_rows = "euclidean"
+    missing_index <- which(
+      is.na(mat),
+      arr.ind = TRUE
     )
 
-    dev.off()
+    if (nrow(missing_index) > 0L) {
+      mat[missing_index] <- row_means[
+        missing_index[, "row"]
+      ]
+    }
+
+    # Remove zero-variance and non-finite rows.
+    row_sd <- apply(
+      mat,
+      1L,
+      sd
+    )
+
+    keep <- is.finite(row_sd) & row_sd > 0
+
+    mat <- mat[
+      keep,
+      ,
+      drop = FALSE
+    ]
+
+    row_sd <- row_sd[keep]
+
+    message(
+      "Variable rows retained: ",
+      format(nrow(mat), big.mark = ",")
+    )
+
+    if (nrow(mat) >= 2L) {
+      # PCA does not need millions of CpGs. Use the most variable loci.
+      max_pca_rows <- 50000L
+
+      if (nrow(mat) > max_pca_rows) {
+        variance_order <- order(
+          row_sd,
+          decreasing = TRUE
+        )
+
+        mat_pca <- mat[
+          variance_order[seq_len(max_pca_rows)],
+          ,
+          drop = FALSE
+        ]
+      } else {
+        mat_pca <- mat
+      }
+
+      message(
+        "CpGs used for PCA: ",
+        format(nrow(mat_pca), big.mark = ",")
+      )
+
+      # Center each CpG across samples.
+      mat_pca_scaled <- t(
+        scale(
+          t(mat_pca),
+          center = TRUE,
+          scale = FALSE
+        )
+      )
+
+      # Remove any rows that became non-finite.
+      finite_rows <- apply(
+        mat_pca_scaled,
+        1L,
+        function(x) all(is.finite(x))
+      )
+
+      mat_pca_scaled <- mat_pca_scaled[
+        finite_rows,
+        ,
+        drop = FALSE
+      ]
+
+      if (nrow(mat_pca_scaled) >= 2L) {
+        pca <- prcomp(
+          t(mat_pca_scaled),
+          center = FALSE,
+          scale. = FALSE
+        )
+
+        variance_explained <- (
+          pca$sdev^2 /
+            sum(pca$sdev^2)
+        ) * 100
+
+        pca_df <- data.frame(
+          sample = rownames(pca$x),
+          PC1 = pca$x[, 1L],
+          PC2 = pca$x[, 2L],
+          stringsAsFactors = FALSE
+        )
+
+        p <- ggplot(
+          pca_df,
+          aes(
+            x = PC1,
+            y = PC2,
+            label = sample
+          )
+        ) +
+          geom_point(size = 3) +
+          geom_text(
+            vjust = -0.8,
+            size = 3,
+            check_overlap = TRUE
+          ) +
+          theme_bw() +
+          xlab(
+            sprintf(
+              "PC1 (%.1f%%)",
+              variance_explained[1L]
+            )
+          ) +
+          ylab(
+            sprintf(
+              "PC2 (%.1f%%)",
+              variance_explained[2L]
+            )
+          ) +
+          ggtitle(
+            paste(
+              opt$contrast,
+              "methylation PCA"
+            )
+          )
+
+        ggsave(
+          filename = pca_file,
+          plot = p,
+          width = 8,
+          height = 7,
+          dpi = 300
+        )
+      }
+
+      # ---------------------------------------------------------------
+      # Heatmap
+      # ---------------------------------------------------------------
+
+      top <- mdiff[
+        is.finite(qvalue)
+      ][
+        order(qvalue)
+      ][
+        seq_len(
+          min(
+            opt$top_n_heatmap,
+            .N
+          )
+        )
+      ]
+
+      top_key <- paste(
+        as.character(top$chr),
+        top$start,
+        sep = "_"
+      )
+
+      heat <- mat[
+        rownames(mat) %in% top_key,
+        ,
+        drop = FALSE
+      ]
+
+      if (nrow(heat) >= 2L) {
+        # Row-scale the selected heatmap loci.
+        heat <- t(
+          scale(
+            t(heat),
+            center = TRUE,
+            scale = TRUE
+          )
+        )
+
+        finite_heat_rows <- apply(
+          heat,
+          1L,
+          function(x) all(is.finite(x))
+        )
+
+        heat <- heat[
+          finite_heat_rows,
+          ,
+          drop = FALSE
+        ]
+
+        if (nrow(heat) >= 2L) {
+          heatmap_file <- file.path(
+            opt$outdir,
+            paste0(
+              opt$contrast,
+              "_top",
+              opt$top_n_heatmap,
+              "_heatmap.png"
+            )
+          )
+
+          png(
+            filename = heatmap_file,
+            width = 2400,
+            height = 3000,
+            res = 300
+          )
+
+          pheatmap(
+            heat,
+            show_rownames = FALSE,
+            clustering_distance_cols = "correlation",
+            clustering_distance_rows = "euclidean",
+            main = paste(
+              opt$contrast,
+              "top differential methylation loci"
+            )
+          )
+
+          dev.off()
+        }
+      }
+    }
   }
 }
 
+# Create a diagnostic PCA image only if PCA could not be generated.
+if (!file.exists(pca_file)) {
+  png(
+    filename = pca_file,
+    width = 2100,
+    height = 1800,
+    res = 300
+  )
+
+  plot.new()
+
+  title("PCA not generated")
+
+  text(
+    0.5,
+    0.55,
+    "The methylation matrix did not contain enough\nfinite, variable CpGs for PCA.",
+    cex = 1.1
+  )
+
+  text(
+    0.5,
+    0.40,
+    paste(
+      "Detected sample columns:",
+      length(sample_cols)
+    ),
+    cex = 0.9
+  )
+
+  dev.off()
+}
 annotation_col <- intersect(
   c("annotation", "feature", "gene_annotation", "annot.type"),
   names(annot)
