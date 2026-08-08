@@ -338,86 +338,80 @@ if (length(sample_cols) >= 2L) {
       # Heatmap
       # ---------------------------------------------------------------
 
-      top <- mdiff[
-        is.finite(qvalue)
-      ][
-        order(qvalue)
-      ][
-        seq_len(
-          min(
-            opt$top_n_heatmap,
-            .N
-          )
-        )
-      ]
+     if (nrow(heat) >= 2L) {
+  heat <- t(
+    scale(
+      t(heat),
+      center = TRUE,
+      scale = TRUE
+    )
+  )
 
-      top_key <- paste(
-        as.character(top$chr),
-        top$start,
-        sep = "_"
+  finite_heat_rows <- apply(
+    heat,
+    1L,
+    function(x) all(is.finite(x))
+  )
+
+  heat <- heat[
+    finite_heat_rows,
+    ,
+    drop = FALSE
+  ]
+
+  # Remove sample columns with zero or non-finite variance.
+  col_sd <- apply(
+    heat,
+    2L,
+    sd,
+    na.rm = TRUE
+  )
+
+  keep_cols <- is.finite(col_sd) & col_sd > 0
+
+  heat <- heat[
+    ,
+    keep_cols,
+    drop = FALSE
+  ]
+
+  message(
+    "Heatmap rows retained: ",
+    nrow(heat),
+    "; sample columns retained: ",
+    ncol(heat)
+  )
+
+  if (nrow(heat) >= 2L && ncol(heat) >= 2L) {
+    heatmap_file <- file.path(
+      opt$outdir,
+      paste0(
+        opt$contrast,
+        "_top",
+        opt$top_n_heatmap,
+        "_heatmap.png"
       )
+    )
 
-      heat <- mat[
-        rownames(mat) %in% top_key,
-        ,
-        drop = FALSE
-      ]
+    png(
+      filename = heatmap_file,
+      width = 2400,
+      height = 3000,
+      res = 300
+    )
 
-      if (nrow(heat) >= 2L) {
-        # Row-scale the selected heatmap loci.
-        heat <- t(
-          scale(
-            t(heat),
-            center = TRUE,
-            scale = TRUE
-          )
-        )
+    pheatmap(
+      heat,
+      show_rownames = FALSE,
+      clustering_distance_cols = "euclidean",
+      clustering_distance_rows = "euclidean",
+      main = paste(
+        opt$contrast,
+        "top differential methylation loci"
+      )
+    )
 
-        finite_heat_rows <- apply(
-          heat,
-          1L,
-          function(x) all(is.finite(x))
-        )
-
-        heat <- heat[
-          finite_heat_rows,
-          ,
-          drop = FALSE
-        ]
-
-        if (nrow(heat) >= 2L) {
-          heatmap_file <- file.path(
-            opt$outdir,
-            paste0(
-              opt$contrast,
-              "_top",
-              opt$top_n_heatmap,
-              "_heatmap.png"
-            )
-          )
-
-          png(
-            filename = heatmap_file,
-            width = 2400,
-            height = 3000,
-            res = 300
-          )
-
-          pheatmap(
-            heat,
-            show_rownames = FALSE,
-            clustering_distance_cols = "correlation",
-            clustering_distance_rows = "euclidean",
-            main = paste(
-              opt$contrast,
-              "top differential methylation loci"
-            )
-          )
-
-          dev.off()
-        }
-      }
-    }
+    dev.off()
   }
 }
 
