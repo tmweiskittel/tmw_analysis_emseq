@@ -338,85 +338,162 @@ if (length(sample_cols) >= 2L) {
       # Heatmap
       # ---------------------------------------------------------------
 
-     if (nrow(heat) >= 2L) {
-  heat <- t(
-    scale(
-      t(heat),
-      center = TRUE,
-      scale = TRUE
-    )
-  )
+      top <- mdiff[
+        is.finite(qvalue)
+      ][
+        order(qvalue)
+      ][
+        seq_len(
+          min(
+            opt$top_n_heatmap,
+            .N
+          )
+        )
+      ]
 
-  finite_heat_rows <- apply(
-    heat,
-    1L,
-    function(x) all(is.finite(x))
-  )
-
-  heat <- heat[
-    finite_heat_rows,
-    ,
-    drop = FALSE
-  ]
-
-  # Remove sample columns with zero or non-finite variance.
-  col_sd <- apply(
-    heat,
-    2L,
-    sd,
-    na.rm = TRUE
-  )
-
-  keep_cols <- is.finite(col_sd) & col_sd > 0
-
-  heat <- heat[
-    ,
-    keep_cols,
-    drop = FALSE
-  ]
-
-  message(
-    "Heatmap rows retained: ",
-    nrow(heat),
-    "; sample columns retained: ",
-    ncol(heat)
-  )
-
-  if (nrow(heat) >= 2L && ncol(heat) >= 2L) {
-    heatmap_file <- file.path(
-      opt$outdir,
-      paste0(
-        opt$contrast,
-        "_top",
-        opt$top_n_heatmap,
-        "_heatmap.png"
+      top_key <- paste(
+        as.character(top$chr),
+        top$start,
+        sep = "_"
       )
-    )
 
-    png(
-      filename = heatmap_file,
-      width = 2400,
-      height = 3000,
-      res = 300
-    )
+      heat <- mat[
+        rownames(mat) %in% top_key,
+        ,
+        drop = FALSE
+      ]
 
-    pheatmap(
-      heat,
-      show_rownames = FALSE,
-      clustering_distance_cols = "euclidean",
-      clustering_distance_rows = "euclidean",
-      main = paste(
-        opt$contrast,
-        "top differential methylation loci"
+      message(
+        "Heatmap candidate rows: ",
+        nrow(heat)
       )
-    )
 
-    dev.off()
+      if (nrow(heat) >= 2L) {
+
+        # Remove rows with non-finite values before scaling.
+        finite_before_scaling <- apply(
+          heat,
+          1L,
+          function(x) all(is.finite(x))
+        )
+
+        heat <- heat[
+          finite_before_scaling,
+          ,
+          drop = FALSE
+        ]
+
+        # Remove zero-variance rows before scaling.
+        if (nrow(heat) >= 2L) {
+          heat_row_sd <- apply(
+            heat,
+            1L,
+            sd
+          )
+
+          keep_heat_rows <- is.finite(heat_row_sd) &
+            heat_row_sd > 0
+
+          heat <- heat[
+            keep_heat_rows,
+            ,
+            drop = FALSE
+          ]
+        }
+
+        # Row-scale CpGs.
+        if (nrow(heat) >= 2L) {
+          heat <- t(
+            scale(
+              t(heat),
+              center = TRUE,
+              scale = TRUE
+            )
+          )
+
+          # Safety check after scaling.
+          finite_after_scaling <- apply(
+            heat,
+            1L,
+            function(x) all(is.finite(x))
+          )
+
+          heat <- heat[
+            finite_after_scaling,
+            ,
+            drop = FALSE
+          ]
+        }
+
+        # Remove sample columns that cannot be clustered.
+        if (nrow(heat) >= 2L) {
+          col_sd <- apply(
+            heat,
+            2L,
+            sd,
+            na.rm = TRUE
+          )
+
+          keep_cols <- is.finite(col_sd) &
+            col_sd > 0
+
+          heat <- heat[
+            ,
+            keep_cols,
+            drop = FALSE
+          ]
+        }
+
+        message(
+          "Heatmap rows retained: ",
+          nrow(heat),
+          "; sample columns retained: ",
+          ncol(heat)
+        )
+
+        if (nrow(heat) >= 2L && ncol(heat) >= 2L) {
+
+          heatmap_file <- file.path(
+            opt$outdir,
+            paste0(
+              opt$contrast,
+              "_top",
+              opt$top_n_heatmap,
+              "_heatmap.png"
+            )
+          )
+
+          png(
+            filename = heatmap_file,
+            width = 2400,
+            height = 3000,
+            res = 300
+          )
+
+          pheatmap(
+            heat,
+            show_rownames = FALSE,
+            clustering_distance_cols = "euclidean",
+            clustering_distance_rows = "euclidean",
+            main = paste(
+              opt$contrast,
+              "top differential methylation loci"
+            )
+          )
+
+          dev.off()
+        }
+      }
+    }
   }
 }
 
-# Create a diagnostic PCA image only if PCA could not be generated.
+# -------------------------------------------------------------------------
+# PCA fallback
+# -------------------------------------------------------------------------
+
 if (!file.exists(pca_file)) {
+
   png(
     filename = pca_file,
     width = 2100,
@@ -447,6 +524,7 @@ if (!file.exists(pca_file)) {
 
   dev.off()
 }
+      
 annotation_col <- intersect(
   c("annotation", "feature", "gene_annotation", "annot.type"),
   names(annot)
