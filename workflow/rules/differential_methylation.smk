@@ -291,6 +291,7 @@ rule visualize_differential_methylation:
             --qvalue-cutoff "{params.qvalue_cutoff}" \
             --meth-diff-cutoff "{params.meth_diff_cutoff}" \
             --top-n-heatmap "{params.top_n_heatmap}" \
+            --sample-contrasts "{params.sample_contrasts}" \
             > "{log}" 2>&1
 
         touch "{output.done}"
