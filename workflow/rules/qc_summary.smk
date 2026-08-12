@@ -52,6 +52,3 @@ rule aggregate_qc_summary:
         """
 
 
-
-        touch "{output.done}"
-        """
