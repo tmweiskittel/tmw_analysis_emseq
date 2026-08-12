@@ -52,6 +52,36 @@ tiled_mdiff <- read_methylkit_bgz(opt$tiled_mdiff)
 meth_mat <- fread(opt$matrix)
 annot <- fread(opt$annotation)
 
+# -------------------------------------------------------------------------
+# Sample cohort metadata for PCA coloring
+# -------------------------------------------------------------------------
+if (is.null(opt$sample_contrasts) || !file.exists(opt$sample_contrasts)) {
+  stop("Sample contrast file not found: ", opt$sample_contrasts)
+}
+
+sample_metadata <- fread(opt$sample_contrasts, encoding = "UTF-8")
+
+if (!"sample" %in% names(sample_metadata)) {
+  stop("Sample contrast file must contain a 'sample' column")
+}
+
+if (!opt$contrast %in% names(sample_metadata)) {
+  stop(
+    "Contrast '", opt$contrast,
+    "' is not a column in ", opt$sample_contrasts
+  )
+}
+
+sample_metadata <- sample_metadata[
+  !is.na(get(opt$contrast)) &
+    get(opt$contrast) != "" &
+    toupper(as.character(get(opt$contrast))) != "NA",
+  .(
+    sample = as.character(sample),
+    group = as.character(get(opt$contrast))
+  )
+]
+
 required_cols <- c("chr", "start", "qvalue", "meth.diff")
 missing_cols <- setdiff(required_cols, names(mdiff))
 if (length(missing_cols) > 0) {
@@ -76,17 +106,90 @@ ggsave(
   dpi = 300
 )
 
-p <- ggplot(mdiff, aes(x = meth.diff, y = -log10(qvalue))) +
-  geom_point(alpha = 0.35, size = 0.6) +
+# -------------------------------------------------------------------------
+# Volcano plot
+# -------------------------------------------------------------------------
+volcano_dt <- copy(mdiff)
+
+# Avoid infinite -log10 values when qvalue is exactly zero.
+positive_qvalues <- volcano_dt$qvalue[
+  is.finite(volcano_dt$qvalue) & volcano_dt$qvalue > 0
+]
+min_positive_qvalue <- if (length(positive_qvalues) > 0L) {
+  min(positive_qvalues)
+} else {
+  .Machine$double.xmin
+}
+
+volcano_dt[
+  !is.finite(qvalue) | qvalue <= 0,
+  qvalue := min_positive_qvalue
+]
+
+volcano_dt[, significance := "Not significant"]
+volcano_dt[
+  qvalue < opt$qvalue_cutoff & meth.diff >= opt$meth_diff_cutoff,
+  significance := "Hypermethylated"
+]
+volcano_dt[
+  qvalue < opt$qvalue_cutoff & meth.diff <= -opt$meth_diff_cutoff,
+  significance := "Hypomethylated"
+]
+
+volcano_dt[, significance := factor(
+  significance,
+  levels = c("Hypomethylated", "Not significant", "Hypermethylated")
+)]
+
+p <- ggplot(
+  volcano_dt,
+  aes(
+    x = meth.diff,
+    y = -log10(qvalue),
+    color = significance
+  )
+) +
+  geom_point(alpha = 0.45, size = 0.7) +
+  geom_hline(
+    yintercept = -log10(opt$qvalue_cutoff),
+    linetype = "dashed",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  geom_vline(
+    xintercept = c(-opt$meth_diff_cutoff, opt$meth_diff_cutoff),
+    linetype = "dashed",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  scale_color_manual(
+    values = c(
+      "Hypomethylated" = "#2166AC",
+      "Not significant" = "grey70",
+      "Hypermethylated" = "#B2182B"
+    ),
+    drop = FALSE
+  ) +
   theme_bw() +
+  theme(
+    legend.position = "right",
+    legend.title = element_blank()
+  ) +
   xlab("Methylation difference (%)") +
-  ylab("-log10(q-value)")
+  ylab("-log10(q-value)") +
+  ggtitle(opt$contrast) +
+  labs(
+    subtitle = paste0(
+      "Dashed lines: q < ", opt$qvalue_cutoff,
+      " and |methylation difference| >= ", opt$meth_diff_cutoff, "%"
+    )
+  )
 
 ggsave(
   file.path(opt$outdir, paste0(opt$contrast, "_volcano_plot.png")),
   p,
-  width = 8,
-  height = 6,
+  width = 9,
+  height = 7,
   dpi = 300
 )
 
@@ -290,28 +393,56 @@ if (length(sample_cols) >= 2L) {
             sum(pca$sdev^2)
         ) * 100
 
-        pca_df <- data.frame(
+        pca_df <- data.table(
           sample = rownames(pca$x),
           PC1 = pca$x[, 1L],
-          PC2 = pca$x[, 2L],
-          stringsAsFactors = FALSE
+          PC2 = pca$x[, 2L]
         )
+
+        pca_df <- merge(
+          pca_df,
+          sample_metadata,
+          by = "sample",
+          all.x = TRUE,
+          sort = FALSE
+        )
+
+        # Restore PCA sample order after merge.
+        pca_df[, sample_order := match(sample, rownames(pca$x))]
+        setorder(pca_df, sample_order)
+        pca_df[, sample_order := NULL]
+
+        if (any(is.na(pca_df$group))) {
+          warning(
+            "No cohort assignment found for PCA sample(s): ",
+            paste(pca_df[is.na(group), sample], collapse = ", ")
+          )
+        }
+
+        # Keep missing assignments visible rather than silently dropping them.
+        pca_df[is.na(group), group := "Unassigned"]
 
         p <- ggplot(
           pca_df,
           aes(
             x = PC1,
             y = PC2,
+            color = group,
             label = sample
           )
         ) +
-          geom_point(size = 3) +
+          geom_point(size = 4, alpha = 0.9) +
           geom_text(
             vjust = -0.8,
             size = 3,
-            check_overlap = TRUE
+            check_overlap = TRUE,
+            show.legend = FALSE
           ) +
           theme_bw() +
+          theme(
+            legend.position = "right",
+            legend.title = element_blank()
+          ) +
           xlab(
             sprintf(
               "PC1 (%.1f%%)",
