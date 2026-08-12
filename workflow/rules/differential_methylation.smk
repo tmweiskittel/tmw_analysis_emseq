@@ -32,8 +32,8 @@ rule methylkit_unite:
     threads:
         32
     output:
-        mbase=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz"),
-        mbase_tbi=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi"),
+        mbase=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz",
+        mbase_tbi=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.txt.bgz.tbi",
 
     shell:
         """
@@ -75,8 +75,8 @@ rule methylkit_diff:
     threads:
         32
     output:
-        mdiff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz"),
-        mdiff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz.tbi"),
+        mdiff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz",
+        mdiff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.txt.bgz.tbi",
 
     shell:
         """
@@ -138,10 +138,10 @@ rule methylkit_diff_tiled:
     threads:
         32
     output:
-        unite=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz"),
-        diff=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz"),
-        unite_tbi=temp(f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz.tbi"),
-        diff_tbi=temp(f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi"),
+        unite=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz",
+        diff=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz",
+        unite_tbi=f"{D_OUT}/dmr/diff/methylBase_{{experiment}}.tiled.txt.bgz.tbi",
+        diff_tbi=f"{D_OUT}/dmr/diff/methylDiff_{{experiment}}.tiled.txt.bgz.tbi",
     shell:
         """
         exec &>> "{log.cmd}"
@@ -198,7 +198,7 @@ rule methylkit_meth_extract:
     resources:
         mem_mb=512000
     output:
-        tsv=temp(f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv")
+        tsv=f"{D_OUT}/dmr/diff/{{experiment}}_pos_meth.tsv"
     shell:
         """
         exec &>> "{log.cmd}"
@@ -229,7 +229,7 @@ rule methylkit_annotate_cpg:
     threads:
         1
     output:
-        tsv=temp(f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv")
+        tsv=f"{D_OUT}/dmr/annotation/{{experiment}}_annotated.tsv"
     shell:
         """
         exec &>> "{log.cmd}"
