@@ -20,16 +20,24 @@ rule upload_differential_methylation_results:
         viz_volcano=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_volcano_plot.png",
         viz_manhattan=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_manhattan_plot.png",
         viz_tiled=f"{D_OUT}/dmr/visualization/{{experiment}}/{{experiment}}_tiled_methylation_difference.png",
+
+        qc_aggregate=f"{D_OUT}/qc/{{experiment}}/qc_aggregate.tsv",
+        qc_stats=f"{D_OUT}/qc/{{experiment}}/qc_group_tests.tsv",
+
     output:
         done=f"{D_OUT}/upload/{{experiment}}.upload.done"
+
     params:
         bucket=config["meta"]["results_bucket"],
         prefix=config["meta"]["results_prefix"]
+
     log:
         f"{D_LOGS}/upload_differential_methylation/{{experiment}}.log"
+
     shell:
         r"""
         set -euo pipefail
+
         mkdir -p "$(dirname "{log}")" "$(dirname "{output.done}")"
 
         DEST="gs://{params.bucket}/{params.prefix}/differential_methylation/{wildcards.experiment}"
@@ -48,6 +56,14 @@ rule upload_differential_methylation_results:
         gcloud storage cp --recursive \
             {D_OUT}/dmr/visualization/{wildcards.experiment} \
             "$DEST/visualization/" >> "{log}" 2>&1
+
+        gcloud storage cp \
+            {input.qc_aggregate} \
+            "$DEST/qc/" >> "{log}" 2>&1
+
+        gcloud storage cp \
+            {input.qc_stats} \
+            "$DEST/qc/" >> "{log}" 2>&1
 
         touch "{output.done}"
         """
