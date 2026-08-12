@@ -8,6 +8,12 @@ suppressPackageStartupMessages({
 })
 
 option_list <- list(
+  make_option(
+  "--sample-contrasts",
+  type = "character",
+  dest = "sample_contrasts",
+  help = "Sample contrast CSV containing sample IDs and cohort assignments"
+  ),
   make_option("--mdiff", type = "character", dest = "mdiff"),
   make_option("--tiled-mdiff", type = "character", dest = "tiled_mdiff"),
   make_option("--matrix", type = "character", dest = "matrix"),
