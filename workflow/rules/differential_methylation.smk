@@ -265,7 +265,8 @@ rule visualize_differential_methylation:
         script=f"{R_EMSEQ}/scripts/figures.R",
         qvalue_cutoff=config.get("dmr_visualization", {}).get("qvalue_cutoff", 0.05),
         meth_diff_cutoff=config.get("dmr_visualization", {}).get("meth_diff_cutoff", 10),
-        top_n_heatmap=config.get("dmr_visualization", {}).get("top_n_heatmap", 500)
+        top_n_heatmap=config.get("dmr_visualization", {}).get("top_n_heatmap", 500),
+        sample_contrasts=config["sample_contrasts_csv"]
     log:
         f"{D_LOGS}/dmr/visualization/{{experiment}}.log"
     benchmark:
