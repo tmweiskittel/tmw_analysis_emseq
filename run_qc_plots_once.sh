@@ -7,17 +7,13 @@ set -euo pipefail
 # Configuration
 # ============================================================================
 
-REPO_PATH="${REPO_PATH:-/home/jupyter/repos/tmw_analysis_emseq}"
+REPO="/home/jupyter/repos/tmw_analysis_emseq"
 
-PLOT_SCRIPT="${REPO_PATH}/scripts/visualize_qc.R"
+PLOT_SCRIPT="${REPO}/scripts/visualize_qc.R"
 
-# Search beneath this directory for the aggregate QC files.
-ANALYSIS_ROOT="${ANALYSIS_ROOT:-/home/jupyter/data/analysis}"
+LOCAL_QC_ROOT="/home/jupyter/data/analysis/qc"
+LOCAL_PLOT_ROOT="/home/jupyter/data/analysis/qc_plots"
 
-# Local location for generated QC figures.
-LOCAL_OUTPUT_ROOT="${LOCAL_OUTPUT_ROOT:-/home/jupyter/data/qc_visualization}"
-
-# Cloud root containing the three contrast directories.
 GCS_ROOT="gs://weiskittel-projects1/radnecrosis/diff_methyl_analysis/differential_methylation"
 
 CONTRASTS=(
@@ -31,7 +27,7 @@ CONTRASTS=(
 # Validation
 # ============================================================================
 
-for program in Rscript gcloud find; do
+for program in Rscript gcloud; do
     if ! command -v "${program}" >/dev/null 2>&1; then
         echo "ERROR: Required program not found: ${program}" >&2
         exit 1
@@ -39,93 +35,52 @@ for program in Rscript gcloud find; do
 done
 
 if [[ ! -s "${PLOT_SCRIPT}" ]]; then
-    echo "ERROR: QC plotting script not found:" >&2
-    echo "  ${PLOT_SCRIPT}" >&2
+    echo "ERROR: Plot script not found:"
+    echo "  ${PLOT_SCRIPT}"
     exit 1
 fi
 
-mkdir -p "${LOCAL_OUTPUT_ROOT}"
-
 
 # ============================================================================
-# Locate a contrast's aggregate QC file
-# ============================================================================
-
-find_qc_aggregate() {
-    local contrast="$1"
-    local matches
-    local count
-
-    matches=$(
-        find "${ANALYSIS_ROOT}" \
-            -type f \
-            -path "*${contrast}*" \
-            -name "qc_aggregate.tsv" \
-            -print
-    )
-
-    count=$(
-        printf "%s\n" "${matches}" |
-            awk 'NF {n++} END {print n + 0}'
-    )
-
-    if [[ "${count}" -eq 0 ]]; then
-        echo "ERROR: No qc_aggregate.tsv found for ${contrast}" >&2
-        return 1
-    fi
-
-    if [[ "${count}" -gt 1 ]]; then
-        echo "ERROR: Multiple qc_aggregate.tsv files found for ${contrast}:" >&2
-        printf "%s\n" "${matches}" >&2
-        return 2
-    fi
-
-    printf "%s\n" "${matches}"
-}
-
-
-# ============================================================================
-# Process contrasts
+# Run each contrast
 # ============================================================================
 
 for contrast in "${CONTRASTS[@]}"; do
 
     echo
-    echo "========================================================================"
-    echo "QC visualization: ${contrast}"
-    echo "========================================================================"
+    echo "======================================================================"
+    echo "QC: ${contrast}"
+    echo "======================================================================"
 
-    if ! QC_AGGREGATE=$(
-        find_qc_aggregate "${contrast}"
-    ); then
-        echo "Skipping ${contrast}."
-        continue
-    fi
+    QC_AGGREGATE="${LOCAL_QC_ROOT}/${contrast}/qc_aggregate.tsv"
+    QC_STATS="${LOCAL_QC_ROOT}/${contrast}/qc_group_tests.tsv"
 
-    OUTDIR="${LOCAL_OUTPUT_ROOT}/${contrast}"
-    LOG="${OUTDIR}/visualize_qc.log"
+    OUTDIR="${LOCAL_PLOT_ROOT}/${contrast}"
 
-    GCS_CONTRAST_DIR="${GCS_ROOT}/${contrast}"
-    GCS_QC_DIR="${GCS_CONTRAST_DIR}/qc"
+    GCS_CONTRAST="${GCS_ROOT}/${contrast}"
+    GCS_QC="${GCS_CONTRAST}/qc"
 
     mkdir -p "${OUTDIR}"
 
-    echo "Input:"
-    echo "  ${QC_AGGREGATE}"
-    echo
-    echo "Local output:"
-    echo "  ${OUTDIR}"
-    echo
-    echo "Cloud output:"
-    echo "  ${GCS_QC_DIR}"
-    echo
+    LOG="${OUTDIR}/visualize_qc.log"
 
 
-    # ========================================================================
+    # ------------------------------------------------------------------------
+    # Check aggregate
+    # ------------------------------------------------------------------------
+
+    if [[ ! -s "${QC_AGGREGATE}" ]]; then
+        echo "ERROR: Missing aggregate QC file:"
+        echo "  ${QC_AGGREGATE}"
+        exit 1
+    fi
+
+
+    # ------------------------------------------------------------------------
     # Generate plots
-    # ========================================================================
+    # ------------------------------------------------------------------------
 
-    echo "Generating QC plots..."
+    echo "Generating plots..."
 
     Rscript "${PLOT_SCRIPT}" \
         --qc "${QC_AGGREGATE}" \
@@ -133,9 +88,9 @@ for contrast in "${CONTRASTS[@]}"; do
         > "${LOG}" 2>&1
 
 
-    # ========================================================================
-    # Validate output
-    # ========================================================================
+    # ------------------------------------------------------------------------
+    # Count plots
+    # ------------------------------------------------------------------------
 
     plot_count=$(
         find "${OUTDIR}" \
@@ -146,76 +101,74 @@ for contrast in "${CONTRASTS[@]}"; do
     )
 
     if [[ "${plot_count}" -eq 0 ]]; then
-        echo "ERROR: No plots generated for ${contrast}." >&2
-        echo "See:" >&2
-        echo "  ${LOG}" >&2
+        echo "ERROR: No plots were generated."
+        echo
+        echo "Log:"
+        cat "${LOG}"
         exit 1
     fi
 
     echo "Generated ${plot_count} plots."
 
 
-    # ========================================================================
+    # ------------------------------------------------------------------------
     # Upload plots
-    # ========================================================================
+    # ------------------------------------------------------------------------
 
-    echo "Uploading QC plots..."
+    echo "Uploading plots to:"
+    echo "  ${GCS_QC}"
 
     gcloud storage cp \
         "${OUTDIR}"/*.png \
-        "${GCS_QC_DIR}/"
+        "${GCS_QC}/"
 
 
-    # ========================================================================
-    # Upload plotting log
-    # ========================================================================
-
-    gcloud storage cp \
-        "${LOG}" \
-        "${GCS_QC_DIR}/visualize_qc.log"
-
-
-    # ========================================================================
-    # Also upload the aggregate QC and statistics if present
-    # ========================================================================
-
-    echo "Uploading aggregate QC table..."
+    # ------------------------------------------------------------------------
+    # Upload aggregate table
+    # ------------------------------------------------------------------------
 
     gcloud storage cp \
         "${QC_AGGREGATE}" \
-        "${GCS_QC_DIR}/qc_aggregate.tsv"
+        "${GCS_QC}/qc_aggregate.tsv"
 
-    QC_DIR=$(dirname "${QC_AGGREGATE}")
-    QC_STATS="${QC_DIR}/qc_group_tests.tsv"
+
+    # ------------------------------------------------------------------------
+    # Upload group statistics
+    # ------------------------------------------------------------------------
 
     if [[ -s "${QC_STATS}" ]]; then
 
-        echo "Uploading QC group statistics..."
-
         gcloud storage cp \
             "${QC_STATS}" \
-            "${GCS_QC_DIR}/qc_group_tests.tsv"
+            "${GCS_QC}/qc_group_tests.tsv"
 
     fi
 
 
+    # ------------------------------------------------------------------------
+    # Upload log
+    # ------------------------------------------------------------------------
+
+    gcloud storage cp \
+        "${LOG}" \
+        "${GCS_QC}/visualize_qc.log"
+
+
     echo
-    echo "Completed ${contrast}"
-    echo "Uploaded to:"
-    echo "  ${GCS_QC_DIR}"
+    echo "Finished ${contrast}"
 
 done
 
 
 echo
-echo "========================================================================"
-echo "QC visualization complete"
-echo "========================================================================"
+echo "======================================================================"
+echo "QC plotting complete"
+echo "======================================================================"
 echo
-echo "Local outputs:"
-echo "  ${LOCAL_OUTPUT_ROOT}"
+echo "Local:"
+echo "  ${LOCAL_PLOT_ROOT}"
 echo
-echo "Cloud outputs:"
+echo "Cloud:"
 echo "  ${GCS_ROOT}/gbmcsf_metcsf/qc/"
 echo "  ${GCS_ROOT}/gbmpla_metpla/qc/"
 echo "  ${GCS_ROOT}/csf_pla/qc/"
