@@ -9,7 +9,7 @@ set -euo pipefail
 
 REPO="/home/jupyter/repos/tmw_analysis_emseq"
 
-PLOT_SCRIPT="${REPO}/scripts/visualize_qc.R"
+PLOT_SCRIPT="${REPO}/workflow/scripts/visualize_qc.R"
 
 LOCAL_QC_ROOT="/home/jupyter/data/analysis/qc"
 LOCAL_PLOT_ROOT="/home/jupyter/data/analysis/qc_plots"
