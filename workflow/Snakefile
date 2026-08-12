@@ -182,16 +182,6 @@ def local_qc_summary_for_sample(sample):
     return f"{D_WORK}/qc/{sample}.qc_summary.tsv"
 
 
-def qc_summary_outputs():
-    outputs = []
-
-    for contrast in enabled_contrasts_for_analysis("qc_summary"):
-        outputs.append(
-            f"{D_OUT}/upload/{contrast}.qc_summary.upload.done"
-        )
-
-    return outputs
-
 ################################################################################### figure helpers 
 def differential_methylation_visualization_outputs():
     outputs = []
@@ -236,7 +226,6 @@ def enabled_outputs():
     outputs = []
     outputs.extend(differential_methylation_outputs())
     outputs.extend(differential_methylation_visualization_outputs())
-    outputs.extend(qc_summary_outputs())
     outputs.extend(ichor_outputs())
     return outputs
 
