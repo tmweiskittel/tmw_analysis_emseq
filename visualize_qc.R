@@ -10,14 +10,12 @@ option_list <- list(
   make_option(
     "--qc",
     type = "character",
-    dest = "qc",
-    help = "Aggregated QC TSV"
+    dest = "qc"
   ),
   make_option(
     "--outdir",
     type = "character",
-    dest = "outdir",
-    help = "Output directory for QC plots"
+    dest = "outdir"
   )
 )
 
@@ -43,34 +41,32 @@ qc <- fread(
   na.strings = c("NA", "", "NaN")
 )
 
-required_columns <- c(
+required <- c(
   "sample",
   "group"
 )
 
-missing_columns <- setdiff(
-  required_columns,
+missing <- setdiff(
+  required,
   names(qc)
 )
 
-if (length(missing_columns) > 0) {
+if (length(missing) > 0) {
   stop(
-    "Missing required columns: ",
-    paste(missing_columns, collapse = ", ")
+    "Missing required column(s): ",
+    paste(missing, collapse = ", ")
   )
 }
 
-# Treat the analysis group as the cohort for plotting.
+# group is the cohort assignment supplied by the analysis pipeline.
 qc[, cohort := factor(group)]
 
 
 # ============================================================================
-# QC metrics
+# Metrics to visualize
 # ============================================================================
 
 metric_labels <- c(
-
-  # Sequencing yield / coverage
   raw_fastq_coverage =
     "Raw sequencing coverage (x)",
 
@@ -83,14 +79,9 @@ metric_labels <- c(
   median_coverage_called_cpgs =
     "Median called-CpG coverage (x)",
 
-  # Methylation
   coverage_weighted_methylation_fraction =
-    "Coverage-weighted CpG methylation fraction",
+    "Coverage-weighted methylation fraction",
 
-  lambda_mean_methylation_fraction =
-    "Lambda methylation fraction",
-
-  # FASTQ QC
   fastp_before_q30_rate =
     "Raw Q30 base fraction",
 
@@ -109,7 +100,6 @@ metric_labels <- c(
   fastp_peak_insert_size =
     "Peak insert size (bp)",
 
-  # Alignment / filtering
   percent_reads_retained =
     "Fraction of reads retained",
 
@@ -119,15 +109,11 @@ metric_labels <- c(
   final_human_mapped_reads =
     "Final human mapped reads",
 
-  final_lambda_mapped_reads =
-    "Final lambda mapped reads",
-
-  final_pUC19_mapped_reads =
-    "Final pUC19 mapped reads",
-
-  # CpG calls
   cpg_sites_called =
-    "Called CpG sites"
+    "Called CpG sites",
+
+  lambda_mean_methylation_fraction =
+    "Lambda methylation fraction"
 )
 
 metrics <- intersect(
@@ -136,12 +122,12 @@ metrics <- intersect(
 )
 
 if (length(metrics) == 0) {
-  stop("No recognized QC metrics found.")
+  stop("No recognized QC metrics were found.")
 }
 
 
 # ============================================================================
-# Sample-level QC plots
+# Sample-level plots
 # ============================================================================
 
 for (metric in metrics) {
@@ -159,16 +145,19 @@ for (metric in metrics) {
     next
   }
 
-  # Order samples by the QC metric so outliers are easy to identify.
+  # Sort samples by value so low/high outliers are obvious.
   sample_order <- dt[
     order(value),
     sample
   ]
 
-  dt[, sample := factor(
-    sample,
-    levels = sample_order
-  )]
+  dt[
+    ,
+    sample := factor(
+      sample,
+      levels = sample_order
+    )
+  ]
 
   p <- ggplot(
     dt,
@@ -194,8 +183,7 @@ for (metric in metrics) {
         hjust = 1,
         vjust = 0.5
       ),
-      panel.grid.minor = element_blank(),
-      legend.position = "right"
+      panel.grid.minor = element_blank()
     )
 
   ggsave(
@@ -212,7 +200,7 @@ for (metric in metrics) {
 
 
 # ============================================================================
-# Cohort distributions
+# Cohort comparison plots
 # ============================================================================
 
 for (metric in metrics) {
@@ -276,7 +264,7 @@ for (metric in metrics) {
 
 
 # ============================================================================
-# Coverage relationships
+# Raw sequencing coverage vs aligned coverage
 # ============================================================================
 
 if (
@@ -321,17 +309,21 @@ if (
     )
 
   ggsave(
-    file.path(
+    filename = file.path(
       opts$outdir,
       "raw_vs_aligned_coverage.png"
     ),
-    p,
+    plot = p,
     width = 7,
     height = 6,
     dpi = 300
   )
 }
 
+
+# ============================================================================
+# Aligned coverage vs CpG coverage
+# ============================================================================
 
 if (
   all(
@@ -370,11 +362,11 @@ if (
     )
 
   ggsave(
-    file.path(
+    filename = file.path(
       opts$outdir,
       "aligned_vs_cpg_coverage.png"
     ),
-    p,
+    plot = p,
     width = 7,
     height = 6,
     dpi = 300
@@ -383,7 +375,7 @@ if (
 
 
 # ============================================================================
-# Coverage comparison within each sample
+# Coverage metrics together
 # ============================================================================
 
 coverage_metrics <- intersect(
@@ -424,10 +416,14 @@ if (length(coverage_metrics) >= 2) {
     )
   ]
 
-  sample_order <- qc[
-    order(raw_fastq_coverage),
-    sample
-  ]
+  if ("raw_fastq_coverage" %in% names(qc)) {
+    sample_order <- qc[
+      order(raw_fastq_coverage),
+      sample
+    ]
+  } else {
+    sample_order <- unique(qc$sample)
+  }
 
   coverage_long[
     ,
@@ -457,7 +453,7 @@ if (length(coverage_metrics) >= 2) {
       x = "Sample",
       y = "Coverage (x)",
       color = "Cohort",
-      shape = "Coverage metric"
+      shape = "Metric"
     ) +
     theme_bw(base_size = 12) +
     theme(
@@ -470,11 +466,11 @@ if (length(coverage_metrics) >= 2) {
     )
 
   ggsave(
-    file.path(
+    filename = file.path(
       opts$outdir,
       "coverage_metrics_by_sample.png"
     ),
-    p,
+    plot = p,
     width = 12,
     height = 6,
     dpi = 300
