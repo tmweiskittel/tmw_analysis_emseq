@@ -52,26 +52,6 @@ rule aggregate_qc_summary:
         """
 
 
-rule upload_qc_summary:
-    input:
-        aggregate=f"{D_OUT}/qc/{{experiment}}/qc_aggregate.tsv",
-        stats=f"{D_OUT}/qc/{{experiment}}/qc_group_tests.tsv"
-    output:
-        done=f"{D_OUT}/upload/{{experiment}}.qc_summary.upload.done"
-    params:
-        bucket=config["meta"]["results_bucket"],
-        prefix=config["meta"]["results_prefix"]
-    log:
-        f"{D_LOGS}/upload_qc_summary/{{experiment}}.log"
-    shell:
-        """
-        set -euo pipefail
-        mkdir -p "$(dirname "{log}")" "$(dirname "{output.done}")"
-
-        DEST="gs://{params.bucket}/{params.prefix}/qc_summary/{wildcards.experiment}"
-
-        gcloud storage cp "{input.aggregate}" "$DEST/" > "{log}" 2>&1
-        gcloud storage cp "{input.stats}" "$DEST/" >> "{log}" 2>&1
 
         touch "{output.done}"
         """
