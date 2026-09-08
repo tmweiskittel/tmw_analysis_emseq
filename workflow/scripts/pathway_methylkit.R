@@ -2183,66 +2183,61 @@ section(
     "Constructing ranked promoter gene statistic"
 )
 
-
 promoter_gene_scores <- promoter_stats[
     ,
     .(
-        n_tested_promoter_tiles =
-            uniqueN(
-                tile_id
-            ),
+        n_tested_promoter_tiles = uniqueN(tile_id),
 
-        median_meth_diff =
-            median(
-                meth.diff,
-                na.rm = TRUE
-            ),
+        median_meth_diff = median(
+            meth.diff,
+            na.rm = TRUE
+        ),
 
-        mean_meth_diff =
-            mean(
-                meth.diff,
-                na.rm = TRUE
-            ),
+        mean_meth_diff = mean(
+            meth.diff,
+            na.rm = TRUE
+        ),
 
-        min_qvalue =
-            min(
-                qvalue,
-                na.rm = TRUE
-            ),
+        min_qvalue = min(
+            qvalue,
+            na.rm = TRUE
+        ),
 
-        max_abs_meth_diff =
-            max(
-                abs(
-                    meth.diff
-                ),
-                na.rm = TRUE
-            )
+        max_abs_meth_diff = max(
+            abs(meth.diff),
+            na.rm = TRUE
+        )
     ),
     by = gene_id
 ]
 
 
-promoter_gene_scores <- add_symbol_column(
-    promoter_gene_scores,
-    "gene_id",
-    "gene_symbol"
-)
-
-
 data.table::setorder(
     promoter_gene_scores,
-    -median_meth_diff
+    -median_meth_diff,
+    -mean_meth_diff,
+    gene_id
 )
 
 
-data.table::fwrite(
-    promoter_gene_scores,
-    file.path(
-        OUTPUT_DIR,
-        "06_promoter_gene_scores.tsv"
-    ),
-    sep = "\t"
+# Add a very small deterministic tie-breaker.
+#
+# The scale is intentionally tiny relative to methylation differences,
+# so it only affects exact or near-exact ties.
+
+tie_rank <- frank(
+    -promoter_gene_scores$mean_meth_diff,
+    ties.method = "first"
 )
+
+epsilon <- 1e-10
+
+promoter_gene_scores[
+    ,
+    gsea_score :=
+        median_meth_diff +
+        epsilon * tie_rank
+]
 
 
 gene_rank <- promoter_gene_scores$median_meth_diff
@@ -2294,6 +2289,8 @@ gsea_go <- tryCatch(
         pvalueCutoff = 0.05,
 
         pAdjustMethod = "BH",
+        
+        nPermSimple = 10000,
 
         verbose = FALSE
     ),
@@ -2327,7 +2324,9 @@ gsea_kegg <- tryCatch(
         pvalueCutoff = 0.05,
 
         pAdjustMethod = "BH",
-
+        
+        nPermSimple = 10000,
+        
         verbose = FALSE
     ),
 
@@ -2357,7 +2356,9 @@ gsea_reactome <- tryCatch(
 
         pvalueCutoff = 0.05,
 
-        pAdjustMethod = "BH",
+        pAdjustMethod = "BH",     
+        
+        nPermSimple = 10000,
 
         verbose = FALSE
     ),
